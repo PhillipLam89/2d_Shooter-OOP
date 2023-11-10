@@ -52,5 +52,19 @@ window.onload = function() {
       this.player = new Player(this) //a new instance of player will be created EVERY time a game instance is created!
       // passing 'this' will pass the whole Game object, now Player instances will have access to Game object
     }
+    update() {
+      this.player.update() //if game object calls update, then player object ALSO calls its update
+    }
+    draw(context) {
+      this.player.draw(context) //note game.draw() will just acll player.draw() passing in curent canvas we wanan draw on
+    }
   }
+  const game = new Game(canvas.width, canvas.height)
+  function animate() {
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+    game.update() //note this ALSO calls game.player.draw()
+    game.draw(ctx)
+    requestAnimationFrame(animate)
+  }
+  animate()
 }

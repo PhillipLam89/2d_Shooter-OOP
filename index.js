@@ -48,8 +48,9 @@ window.onload = function() {
   class Game {
     constructor(width,height) { //takes in global canvas width / height
       this.width = width
-      this.height = height 
-
+      this.height = height
+      this.player = new Player(this) //a new instance of player will be created EVERY time a game instance is created!
+      // passing 'this' will pass the whole Game object, now Player instances will have access to Game object
     }
   }
 }

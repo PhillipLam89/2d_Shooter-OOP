@@ -1,5 +1,5 @@
 
-window.onload = function() {
+
   //canvas setup
   const canvas = document.getElementById('canvas1')
   const ctx = canvas.getContext('2d')
@@ -59,14 +59,14 @@ window.onload = function() {
       this.width = 120
       this.height = 190 //use exact width/height dimensions on our player img
       this.x = 10
-      this.y = 10 //starting x, y positions
+      this.y = 150 //starting x, y positions
       this.speedY = 0 //since our game is moving horizontally
       this.maxSpeed = 3
       this.projectiles = []
     
     }
     update() {
-      console.log(this)
+  
       if (this.game.keys.includes('ArrowUp')||this.game.keys.includes('w')) {
           const isAtTop = this.y <= 0
           this.speedY = isAtTop ? 0 : this.maxSpeed * -1
@@ -93,12 +93,16 @@ window.onload = function() {
     })      
     }
     shootTop() {
-      this.projectiles.push(new Projectile(this.game, this.x, this.y))
+      if (this.game.ammo > 0)  {
+          this.projectiles.push(new Projectile(this.game, this.x, this.y ))
+          this.game.ammo--
+      }
+      
    
     }
   }
   class Enemy {
-
+    
   }
   class Layer {
 
@@ -107,7 +111,19 @@ window.onload = function() {
 
   }
   class UI {
-
+    constructor(game) {
+      this.game = game
+      this.fontSize = 25
+      this.fontFamily = 'Helvetica'
+      this.color = 'white'
+    }
+    draw(context) {
+      //ammo
+      for (let i = 0; i < this.game.ammo; i++) {
+        context.fillStyle = 'red'
+        context.fillRect(20 + 8 * i,10,3,20)
+      }
+    }
   }
   class Game {
     constructor(width,height) { //takes in global canvas width / height
@@ -116,25 +132,39 @@ window.onload = function() {
       this.player = new Player(this) //a new instance of player will be created EVERY time a game instance is created!
       // passing 'this' will pass the whole Game object, now Player instances will have access to Game object
       this.input = new InputHandler(this)
+      this.ui = new UI(this)
       this.keys = []
+      this.ammo = 20
+      this.maxAmmo = 20      
+      this.ammoTimer = 0
+      this.ammoInterval = 500
     }
-    update() {
+    update(deltaTime) {
 
       this.player.update() //if game object calls update, then player object ALSO calls its update
+      if (this.ammoTimer > this.ammoInterval) {
+           if (this.ammo < this.maxAmmo) this.ammo++
+           this.ammoTimer = 0
+      } else {
+          this.ammoTimer+= deltaTime
+      }
     }
     draw(context) {
-
       this.player.draw(context) //note game.draw() will just call player.draw() passing in curent canvas we wanan draw on
+      this.ui.draw(context)
     }
   }
   // the code below will instantiate a new game AND player on document load.
   const game = new Game(canvas.width, canvas.height)
-  function animate() {
+  let lastTime = 0
+  function animate(timeStamp) {
+    const deltaTime = timeStamp - lastTime    
+    lastTime = timeStamp
     ctx.clearRect(0,0,canvas.width,canvas.height)
-    game.update() //note this ALSO calls game.player.draw()
+    game.update(deltaTime) //note this ALSO calls game.player.draw()
     game.draw(ctx)
     // if (game.player.y + game.player.height >= canvas.height) return
     requestAnimationFrame(animate)
   }
-  animate()
-}
+  animate(0)
+

@@ -43,7 +43,7 @@
     update() {
       this.x+= this.speed
       //the below will remove all projectiles once theyre past 80% of the screen, also prevents enemies being killed off screen
-      if (this.x >= this.game.width * 0.65) this.markedForDeletion = true
+      if (this.x >= this.game.width * 0.85) this.markedForDeletion = true
     }
     draw(context) {
       context.fillStyle = 'yellow'
@@ -150,18 +150,37 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
       context.save()
       context.fillStyle = this.color
       context.ShadowOffsetX = 2
+      context.ShadowOffsetY = 2
+      context.shadowColor = 'black'
       context.font = this.fontSize + 'px ' + this.fontFamily
 
       //display score
       context.fillText('Score: ' + this.game.score, 20, 70)
       //ammo
-      // new Array(this.game.ammo).fill('').forEach((ammo,i) => {
-      //   context.fillStyle = 'tomato'
-      //   context.fillRect(20 + 10 * i,10,3,20)
-      // })
-      for (let i = 0; i < this.game.ammo   ; i++) {
-        context.fillStyle = 'navy'
+
+      for (let i = 0; i < this.game.ammo; i++) {
+        context.fillStyle = 'darkviolet'
         context.fillRect(20 + 10 * i,10,3,20)
+      }
+      //timer
+      const formattedTime = ~~(this.game.gameTime * 0.001)
+      context.fillText('Timer: ' + formattedTime + 's', 20, 100)
+      // game over msgs 
+      if (this.game.gameOver) {
+        context.textAlign = 'center'
+        let msg1
+        let msg2
+        if (this.game.score >= this.game.winningScore) {
+          msg1 = 'You win!'
+          msg2 = 'Well Done!'
+        } else {
+          msg1 = 'You Lose!'
+          msg2 = 'You Suck, Try Again!'
+        }
+        context.font = '50px ' + this.fontFamily
+        context.fillText(msg1, this.game.width / 2, this.game.height * .5)
+        context.font = '25px ' + this.fontFamily
+        context.fillText(msg2, this.game.width / 2, this.game.height * .5 - 50)
       }
       context.restore()
     }
@@ -182,13 +201,17 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
       this.maxAmmo = 20      
       this.ammoTimer = 0
       this.score = 0
-      this.winningScore = 50
+      this.winningScore = 5
       this.ammoInterval = 500
       this.gameOver = false
+      this.gameTime = 0
+      this.timeLimit = 5000 //5s to test
     }
     update(deltaTime) {
-
-      this.player.update() //if game object calls update, then player object ALSO calls its update
+      if (!this.gameOver) this.gameTime+= deltaTime
+      // if (this.gameTime >= this.timeLimit) this.gameOver = true
+      this.player.update() 
+      //if game object calls update, then player object ALSO calls its update
       if (this.ammoTimer > this.ammoInterval) {
            if (this.ammo < this.maxAmmo) this.ammo++
            this.ammoTimer = 0
@@ -209,8 +232,8 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
             
               if (enemy.lives <= 0) {
                 enemy.markedForDeletion = true
-                this.score+= enemy.score
-                if (this.score > this.winningScore) this.gameOver = true
+                if(!this.gameOver)this.score+= enemy.score
+                if (this.score >= this.winningScore) this.gameOver = true
               }
           }
         })       
@@ -248,13 +271,15 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
   const game = new Game(canvas.width, canvas.height)
   let lastTime = 0
   function animate(timeStamp) {
-    const deltaTime = timeStamp - lastTime    
+    const deltaTime = timeStamp - lastTime  
+
     lastTime = timeStamp
     ctx.clearRect(0,0,canvas.width,canvas.height)
-    game.update(deltaTime) //note this ALSO calls game.player.draw()
+    game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
     game.draw(ctx)
     // if (game.player.y + game.player.height >= canvas.height) return
     requestAnimationFrame(animate)
   }
   animate(0)
+
 

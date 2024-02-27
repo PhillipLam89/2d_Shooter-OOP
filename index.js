@@ -33,21 +33,21 @@
   class Projectile {
     constructor(game,x,y) {
       this.game = game
-      this.x = x
+      this.x = x + this.game.player.width //so our projectile shoots from right side of player
       this.y = y
-      this.width = 15
-      this.height = 3
-      this.speed = 3.
+      this.width = 10
+      this.height = 13
+      this.speed = 1.5
       this.markedForDeletion = false
     }
     update() {
       this.x+= this.speed
       //the below will remove all projectiles once theyre past 80% of the screen, also prevents enemies being killed off screen
-      if (this.x > this.game.width * 0.8) this.markedForDeletion = true
+      if (this.x >= this.game.width * 0.85) this.markedForDeletion = true
     }
     draw(context) {
-      context.fillStyle = Math.random() > 0.50 ? 'red' : 'blue'  //glowing purple effect
-      context.fillRect(this.x + this.game.player.width,this.y,this.width  ,this.height*4)
+      context.fillStyle = 'yellow'
+      context.fillRect(this.x,this.y,this.width,this.height)
     }
   }
   class Particle {
@@ -94,7 +94,7 @@
     }
     shootTop() {
       if (this.game.ammo > 0)  {
-          this.projectiles.push(new Projectile(this.game, this.x, this.y ))
+          this.projectiles.push(new Projectile(this.game, this.x , this.y ))
           this.game.ammo--
       }
       
@@ -102,8 +102,37 @@
     }
   }
   class Enemy {
-    
+      constructor(game) {
+        this.game = game
+        this.x = this.game.width
+        this.speedX = Math.random() * -1.5 - 0.5
+        this.markedForDeletion = false
+        this.lives = 5
+        this.score = this.lives
+      }
+      update() {
+        this.x+= this.speedX
+        if (this.x + this.width < 0) this.markedForDeletion = true
+      }
+      draw(context) {
+          context.fillStyle = 'red'
+          context.fillRect(this.x ,this.y, this.width, this.height)
+          context.fillStyle = 'black'
+          context.font =  '20px Helvetica'
+          context.fillText(this.lives, this.x + (this.width * .4) , this.y  )
+
+      }
   }
+
+class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that cannot be find on Angler1 will look at Enemy's props/methods
+  constructor(game) { //if constructor is not declared here, all new Angler1's will run Enemy's (aka parent's) constructor instead!
+    super(game) // calling super here will make sure the Parent Class aka Enemy's constructor will run FIRST, THEN the Angler1 constructor runs
+    this.width = 228 * .2
+    this.height = 169 * .2
+    this.y = Math.random() * (this.game.height * 0.90 - this.height)
+  }
+}
+
   class Layer {
 
   }
@@ -118,11 +147,42 @@
       this.color = 'white'
     }
     draw(context) {
+      context.save()
+      context.fillStyle = this.color
+      context.ShadowOffsetX = 2
+      context.ShadowOffsetY = 2
+      context.shadowColor = 'black'
+      context.font = this.fontSize + 'px ' + this.fontFamily
+
+      //display score
+      context.fillText('Score: ' + this.game.score, 20, 70)
       //ammo
+
       for (let i = 0; i < this.game.ammo; i++) {
-        context.fillStyle = 'red'
-        context.fillRect(20 + 8 * i,10,3,20)
+        context.fillStyle = 'darkviolet'
+        context.fillRect(20 + 10 * i,10,3,20)
       }
+      //timer
+      const formattedTime = ~~(this.game.gameTime * 0.001)
+      context.fillText('Timer: ' + formattedTime + 's', 20, 100)
+      // game over msgs 
+      if (this.game.gameOver) {
+        context.textAlign = 'center'
+        let msg1
+        let msg2
+        if (this.game.score >= this.game.winningScore) {
+          msg1 = 'You win!'
+          msg2 = 'Well Done!'
+        } else {
+          msg1 = 'You Lose!'
+          msg2 = 'You Suck, Try Again!'
+        }
+        context.font = '50px ' + this.fontFamily
+        context.fillText(msg1, this.game.width / 2, this.game.height * .5)
+        context.font = '25px ' + this.fontFamily
+        context.fillText(msg2, this.game.width / 2, this.game.height * .5 - 50)
+      }
+      context.restore()
     }
   }
   class Game {
@@ -134,37 +194,92 @@
       this.input = new InputHandler(this)
       this.ui = new UI(this)
       this.keys = []
+      this.enemies = []
+      this.enemyTimer = 0
+      this.enemyInterval = 1000
       this.ammo = 20
       this.maxAmmo = 20      
       this.ammoTimer = 0
+      this.score = 0
+      this.winningScore = 5
       this.ammoInterval = 500
+      this.gameOver = false
+      this.gameTime = 0
+      this.timeLimit = 5000 //5s to test
     }
     update(deltaTime) {
-
-      this.player.update() //if game object calls update, then player object ALSO calls its update
+      if (!this.gameOver) this.gameTime+= deltaTime
+      // if (this.gameTime >= this.timeLimit) this.gameOver = true
+      this.player.update() 
+      //if game object calls update, then player object ALSO calls its update
       if (this.ammoTimer > this.ammoInterval) {
            if (this.ammo < this.maxAmmo) this.ammo++
            this.ammoTimer = 0
       } else {
           this.ammoTimer+= deltaTime
       }
+      this.enemies.forEach(enemy => {
+        enemy.update()
+        if (this.checkCollision(this.player, enemy)) {
+            enemy.markedForDeletion = true
+        }
+        this.player.projectiles.forEach(projectile => {
+          if (this.checkCollision(projectile, enemy)) {
+              //marking for deletion will make removing easier
+              projectile.markedForDeletion = true
+              enemy.lives--
+              
+            
+              if (enemy.lives <= 0) {
+                enemy.markedForDeletion = true
+                if(!this.gameOver)this.score+= enemy.score
+                if (this.score >= this.winningScore) this.gameOver = true
+              }
+          }
+        })       
+      })  
+
+    
+      if (this.enemyTimer > this.enemyInterval && !this.gameOver) {
+          this.addEnemy()
+          this.enemyTimer = 0
+      } else {
+         this.enemyTimer += deltaTime
+      }
+      this.enemies = this.enemies.filter(enemy => !enemy.markedForDeletion) //removes ALL marked-for-delete enemies if they pass the collision check
     }
     draw(context) {
       this.player.draw(context) //note game.draw() will just call player.draw() passing in curent canvas we wanan draw on
       this.ui.draw(context)
+      this.enemies.forEach(enemy => {
+        enemy.draw(context)
+      })
+    }
+    addEnemy() {
+      this.enemies.push(new Angler1(this)) //passing 'this' aka game obj since Angler class expects a game argument
+    }  
+    checkCollision(rect1,rect2) {
+      return (
+         rect1.x < rect2.x + rect2.width &&
+         rect1.x + rect1.width > rect2.x  &&
+         rect1.y < rect2.y + rect2.height &&
+         rect1.height + rect1.y > rect2.y
+      )
     }
   }
   // the code below will instantiate a new game AND player on document load.
   const game = new Game(canvas.width, canvas.height)
   let lastTime = 0
   function animate(timeStamp) {
-    const deltaTime = timeStamp - lastTime    
+    const deltaTime = timeStamp - lastTime  
+
     lastTime = timeStamp
     ctx.clearRect(0,0,canvas.width,canvas.height)
-    game.update(deltaTime) //note this ALSO calls game.player.draw()
+    game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
     game.draw(ctx)
     // if (game.player.y + game.player.height >= canvas.height) return
     requestAnimationFrame(animate)
   }
   animate(0)
+
 

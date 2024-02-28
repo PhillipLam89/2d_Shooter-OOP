@@ -57,7 +57,7 @@
     constructor(game) {
       this.game = game //passes in whole game obj
       this.width = 120
-      this.height = 190 //use exact width/height dimensions on our player img
+      this.height = 90 //use exact width/height dimensions on our player img
       this.x = 10
       this.y = 150 //starting x, y positions
       this.speedY = 0 //since our game is moving horizontally
@@ -119,7 +119,7 @@
           context.fillRect(this.x ,this.y, this.width, this.height)
           context.fillStyle = 'black'
           context.font =  '20px Helvetica'
-          context.fillText(this.lives, this.x + (this.width * .4) , this.y  )
+          context.fillText(this.lives, this.x + (this.width * .4) , this.y + 25)
 
       }
   }
@@ -133,11 +133,51 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
   }
 }
 
-  class Layer {
+class Layer { //sets up all 4 layer images 
+  constructor(game, img, speedMod) {
+    this.game = game
+    this.image = img
+    this.speedMod = speedMod
+    this.width = 1765
+    this.height = 500
+    this.x = 0
+    this.y = 0
+  }
+
+  update() {
+    if (this.x <= this.width* -1 ) this.x = 0 
+    this.x-= this.game.speed * this.speedMod
+  }
+  draw(context) {
+    context.drawImage(this.image, this.x,this.y)
+    context.drawImage(this.image, this.x + this.width,this.y)
+  }
 
   }
-  class Background { //pools Layer classes
+  class Background { //pools the 4 Layer imgs together
+    constructor(game) {
+      this.game = game
+      this.images = [...document.querySelectorAll('.bgLayer')] //must convert to array so we can use map method below
+      this.layers = this.images.map((img) => new Layer(this.game,img, 0.5))
 
+      // this.image1 = document.querySelector('#layer1')
+      // this.image2 = document.querySelector('#layer2')
+      // this.image3 = document.querySelector('#layer3')
+      // this.image4 = document.querySelector('#layer4')
+
+      // this.layer1 = new Layer(this.game, this.image1, 2)
+      // this.layer2 = new Layer(this.game, this.image2, 2)
+      // this.layer3 = new Layer(this.game, this.image3, 2)
+      // this.layer4 = new Layer(this.game, this.image4, 2)
+
+      // this.layers = [this.layer1,this.layer2,this.layer3,this.layer4]
+    }
+    update() {
+      this.layers.forEach(layer => layer.update())
+    }
+    draw(context) {
+      this.layers.forEach(layer => layer.draw(context))
+    }
   }
   class UI {
     constructor(game) {
@@ -189,6 +229,7 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
     constructor(width,height) { //takes in global canvas width / height
       this.width = width
       this.height = height
+      this.backGround = new Background(this)
       this.player = new Player(this) //a new instance of player will be created EVERY time a game instance is created!
       // passing 'this' will pass the whole Game object, now Player instances will have access to Game object
       this.input = new InputHandler(this)
@@ -198,18 +239,21 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
       this.enemyTimer = 0
       this.enemyInterval = 1000
       this.ammo = 20
-      this.maxAmmo = 20      
+      this.maxAmmo = 60      
       this.ammoTimer = 0
       this.score = 0
-      this.winningScore = 5
-      this.ammoInterval = 500
+      this.winningScore = 55555
+      this.ammoInterval = 200
       this.gameOver = false
       this.gameTime = 0
       this.timeLimit = 5000 //5s to test
+      this.speed = 1
     }
     update(deltaTime) {
       if (!this.gameOver) this.gameTime+= deltaTime
       // if (this.gameTime >= this.timeLimit) this.gameOver = true
+
+      this.backGround.update()
       this.player.update() 
       //if game object calls update, then player object ALSO calls its update
       if (this.ammoTimer > this.ammoInterval) {
@@ -249,6 +293,7 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
       this.enemies = this.enemies.filter(enemy => !enemy.markedForDeletion) //removes ALL marked-for-delete enemies if they pass the collision check
     }
     draw(context) {
+      this.backGround.draw(context) //background must be drawn first so it is in the BACK of the player
       this.player.draw(context) //note game.draw() will just call player.draw() passing in curent canvas we wanan draw on
       this.ui.draw(context)
       this.enemies.forEach(enemy => {
@@ -259,11 +304,11 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
       this.enemies.push(new Angler1(this)) //passing 'this' aka game obj since Angler class expects a game argument
     }  
     checkCollision(rect1,rect2) {
-      return (
-         rect1.x < rect2.x + rect2.width &&
-         rect1.x + rect1.width > rect2.x  &&
-         rect1.y < rect2.y + rect2.height &&
-         rect1.height + rect1.y > rect2.y
+      return ( //basic rectangle collision formula 
+        rect1.x < rect2.x + rect2.width &&
+        rect2.x < rect1.x + rect1.width &&
+        rect1.y < rect2.y + rect2.height &&
+        rect2.y < rect1.y + rect1.height
       )
     }
   }

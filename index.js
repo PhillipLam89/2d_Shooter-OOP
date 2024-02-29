@@ -104,7 +104,7 @@
         if(this.powerUpTimer > this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
-          this.frameY = 0 //so we only render the NON-POWERED UP image
+          this.frameY = 0
         }
       }
     }

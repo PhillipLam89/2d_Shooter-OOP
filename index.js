@@ -12,12 +12,14 @@
         this.game = game;
         window.onkeydown = (e) => {
     
-          const specialKeys= 'ArrowUp|ArrowDown|w|s|'
+          const specialKeys= 'ArrowUp|ArrowDown|w|s|WS'
           if ((specialKeys.includes(e.key)) 
               && !this.game.keys.includes(e.key)) {
                    this.game.keys.push(e.key)
           } else if (e.key == ' ') {
             this.game.player.shootTop()
+          } else if (e.key == 'z' || e.key == 'Z') {
+            this.game.debug = !this.game.debug
           }
         
 
@@ -43,7 +45,7 @@
     update() {
       this.x+= this.speed
       //the below will remove all projectiles once theyre past 80% of the screen, also prevents enemies being killed off screen
-      if (this.x >= this.game.width * 0.85) this.markedForDeletion = true
+      if (this.x >= this.game.width - (228*0.2)) this.markedForDeletion = true
     }
     draw(context) {
       context.fillStyle = 'yellow'
@@ -57,21 +59,25 @@
     constructor(game) {
       this.game = game //passes in whole game obj
       this.width = 120
-      this.height = 90 //use exact width/height dimensions on our player img
+      this.height = 190 //use exact width/height dimensions on our player img
       this.x = 10
       this.y = 150 //starting x, y positions
+      this.frameX = 0 //these frames help us to render only portions of the sprite sheet per requestAnimationFrame in order to simulate fluid movement
+      this.frameY = 0
+      this.maxFrame = 37 //this is how many animations in our sprite
       this.speedY = 0 //since our game is moving horizontally
       this.maxSpeed = 3
       this.projectiles = []
+      this.image = document.getElementById('player')
     
     }
     update() {
   
-      if (this.game.keys.includes('ArrowUp')||this.game.keys.includes('w')) {
+      if (this.game.keys.includes('ArrowUp')||this.game.keys.includes('w') ||this.game.keys.includes('W')) {
           const isAtTop = this.y <= 0
           this.speedY = isAtTop ? 0 : this.maxSpeed * -1
       }
-      else if (this.game.keys.includes('ArrowDown')||this.game.keys.includes('s')) {
+      else if (this.game.keys.includes('ArrowDown')||this.game.keys.includes('s') ||this.game.keys.includes('S')) {
                 const isAtBottom = this.height + this.y >= canvas.height  //returns true if player bottom touches game floor, then we do not allow further downward movement        
                 this.speedY = isAtBottom ? 0 : this.maxSpeed
       }
@@ -84,10 +90,19 @@
       })
 
       this.projectiles = this.projectiles.filter(projectile => !projectile.markedForDeletion)
-    }
+      // handle sprite animation
+
+
+      if (this.frameX < this.maxFrame) this.frameX++
+      else this.frameX = 0
+      }
+
     draw(context) { //better to pass in our ctx as an argument
-      context.fillStyle = 'black'
-      context.fillRect(this.x, this.y, this.width, this.height)
+      if (this.game.debug) {
+        context.lineWidth = 5
+        context.strokeRect(this.x, this.y, this.width, this.height)  
+      }   
+      context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width, this.height, this.x,this.y, this.width,this.height)
       this.projectiles.forEach(projectile => {
         projectile.draw(context)
     })      
@@ -158,8 +173,8 @@ class Layer { //sets up all 4 layer images
     constructor(game) {
       this.game = game
       this.images = [...document.querySelectorAll('.bgLayer')] //must convert to array so we can use map method below
-      this.layers = this.images.map((img) => new Layer(this.game,img, 0.5))
-
+      this.layers = this.images.map((img) => new Layer(this.game,img, .66))
+      this.lastLayer = new Layer(this.game, document.querySelector('.bgLayer4'), 0.55)
       // this.image1 = document.querySelector('#layer1')
       // this.image2 = document.querySelector('#layer2')
       // this.image3 = document.querySelector('#layer3')
@@ -177,6 +192,12 @@ class Layer { //sets up all 4 layer images
     }
     draw(context) {
       this.layers.forEach(layer => layer.draw(context))
+    }
+    updateLastLayer() { //so the layer 4 appears IN-FRONT of our player but our player  appears IN FRONT of all other layers
+      this.lastLayer.update()
+    }
+    drawLastLayer(ctx) {
+      this.lastLayer.draw(ctx)
     }
   }
   class UI {
@@ -237,17 +258,18 @@ class Layer { //sets up all 4 layer images
       this.keys = []
       this.enemies = []
       this.enemyTimer = 0
-      this.enemyInterval = 1000
+      this.enemyInterval = 1500
       this.ammo = 20
       this.maxAmmo = 60      
       this.ammoTimer = 0
       this.score = 0
-      this.winningScore = 55555
+      this.winningScore = 5555
       this.ammoInterval = 200
       this.gameOver = false
       this.gameTime = 0
       this.timeLimit = 5000 //5s to test
       this.speed = 1
+      this.debug = true
     }
     update(deltaTime) {
       if (!this.gameOver) this.gameTime+= deltaTime
@@ -255,6 +277,7 @@ class Layer { //sets up all 4 layer images
 
       this.backGround.update()
       this.player.update() 
+      this.backGround.updateLastLayer()
       //if game object calls update, then player object ALSO calls its update
       if (this.ammoTimer > this.ammoInterval) {
            if (this.ammo < this.maxAmmo) this.ammo++
@@ -295,6 +318,7 @@ class Layer { //sets up all 4 layer images
     draw(context) {
       this.backGround.draw(context) //background must be drawn first so it is in the BACK of the player
       this.player.draw(context) //note game.draw() will just call player.draw() passing in curent canvas we wanan draw on
+      this.backGround.drawLastLayer(context)
       this.ui.draw(context)
       this.enemies.forEach(enemy => {
         enemy.draw(context)
@@ -325,6 +349,7 @@ class Layer { //sets up all 4 layer images
     // if (game.player.y + game.player.height >= canvas.height) return
     requestAnimationFrame(animate)
   }
+ 
   animate(0)
 
 

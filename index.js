@@ -144,7 +144,8 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
     super(game) // calling super here will make sure the Parent Class aka Enemy's constructor will run FIRST, THEN the Angler1 constructor runs
     this.width = 228 * .2
     this.height = 169 * .2
-    this.y = Math.random() * (this.game.height * 0.90 - this.height)
+    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    
   }
 }
 
@@ -258,7 +259,7 @@ class Layer { //sets up all 4 layer images
       this.keys = []
       this.enemies = []
       this.enemyTimer = 0
-      this.enemyInterval = 1500
+      this.enemyInterval = 666
       this.ammo = 20
       this.maxAmmo = 60      
       this.ammoTimer = 0
@@ -269,7 +270,7 @@ class Layer { //sets up all 4 layer images
       this.gameTime = 0
       this.timeLimit = 5000 //5s to test
       this.speed = 1
-      this.debug = true
+      this.debug = false
     }
     update(deltaTime) {
       if (!this.gameOver) this.gameTime+= deltaTime

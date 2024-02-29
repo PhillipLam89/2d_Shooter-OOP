@@ -13,6 +13,7 @@
   background: turquoise;
   max-width: 100%;
   max-height: 100%;
+  min-width: 100dvw;
   min-height: 100dvh;
 }
 #layer1,#layer2,#layer3,#layer4,#player,#angler1,#angler2,#lucky,.hide {

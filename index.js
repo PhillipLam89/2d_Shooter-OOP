@@ -39,7 +39,7 @@
       this.y = y
       this.width = 10
       this.height = 13
-      this.speed = 1.5
+      this.speed = 3
       this.markedForDeletion = false
     }
     update() {
@@ -66,15 +66,15 @@
       this.frameY = 0
       this.maxFrame = 37 //this is how many animations in our sprite
       this.speedY = 0 //since our game is moving horizontally
-      this.maxSpeed = 3
+      this.maxSpeed = 5
       this.projectiles = []
       this.image = document.getElementById('player')
       this.isPoweredUp = false
       this.powerUpTimer = 0
-      this.powerUpLimit = 10000
+      this.powerUpLimit = 2222
     
     }
-    update() {
+    update(deltaTime) {
   
       if (this.game.keys.includes('ArrowUp')||this.game.keys.includes('w') ||this.game.keys.includes('W')) {
           const isAtTop = this.y <= 0
@@ -100,13 +100,19 @@
       else this.frameX = 0
 
       //handle power up
+
       if (this.isPoweredUp) {
-        if(this.powerUpTimer > this.powerUpLimit) {
+        if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
+          document.getElementById('player').src = './player.png'
           this.frameY = 0
+        } else {
+          this.powerUpTimer+= deltaTime
+          this.frameY = 1
+          this.game.ammo+= 0.1 //extra ammo recharge speed during powerUp mode :D
         }
-      }
+      } 
     }
       
 
@@ -114,19 +120,37 @@
       if (this.game.debug) {
         context.lineWidth = 2
         context.strokeRect(this.x, this.y, this.width, this.height)  
-      }   
-      context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width, this.height, this.x,this.y, this.width,this.height)
+      }  
       this.projectiles.forEach(projectile => {
         projectile.draw(context)
-    })      
+    }) 
+
+    if (this.isPoweredUp) {
+      context.drawImage(document.getElementById('player'),this.x,this.y, this.width,this.height)
+    }else context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width, this.height, this.x,this.y - 26, this.width,this.height)
+      
     }
     shootTop() {
-      if (this.game.ammo > 0)  {
+      if (this.game.ammo > 0 && !this.isPoweredUp)  {
           this.projectiles.push(new Projectile(this.game, this.x , this.y ))
           this.game.ammo--
+      } else if (this.isPoweredUp) {
+        this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.40))
+        this.shootBottom()
       }
       
    
+    }
+    shootBottom() {
+      if (this.game.ammo > 0)  {
+        this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.5))
+     
+    }      
+    }
+    enterPowerUp() {
+      this.powerUpTimer = 0
+      this.isPoweredUp = true
+      this.game.ammo = this.game.maxAmmo
     }
   }
   class Enemy {
@@ -157,7 +181,7 @@
           }
           if (this.frameX < this.maxFrame) {
             this.frameX++
-          }else this.frameX = 0
+          }else this.frameX = 0      
           context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width,this.height, this.x,this.y,this.width,this.height)
 
 
@@ -181,7 +205,7 @@ class Angler2 extends Enemy {
     super(game) 
     this.width = 213
     this.height = 165 
-    this.lives = 5
+    this.lives = 6
     this.score = this.lives
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = document.getElementById('angler2')
@@ -193,8 +217,8 @@ class LuckyFish extends Enemy {
     super(game) 
     this.width = 99
     this.height = 95 
-    this.lives = 3
-    this.score = this.lives * 4
+    this.lives = 2
+    this.score = this.lives * 5
     this.type = 'lucky'
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = document.getElementById('lucky')
@@ -316,12 +340,12 @@ class Game {
     this.maxAmmo = 60      
     this.ammoTimer = 0
     this.score = 0
-    this.winningScore = 5555
-    this.ammoInterval = 200
+    this.winningScore = 500
+    this.ammoInterval = 555
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 5000 //5s to test
-    this.speed = 1
+    this.speed = 1.2
     this.debug = false
   }
   update(deltaTime) {
@@ -329,7 +353,7 @@ class Game {
     // if (this.gameTime >= this.timeLimit) this.gameOver = true
 
     this.backGround.update()
-    this.player.update() 
+    this.player.update(deltaTime) 
     this.backGround.updateLastLayer()
     //if game object calls update, then player object ALSO calls its update
     if (this.ammoTimer > this.ammoInterval) {
@@ -339,9 +363,19 @@ class Game {
         this.ammoTimer+= deltaTime
     }
     this.enemies.forEach(enemy => {
-      enemy.update()
+      enemy.update(deltaTime)
       if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true
+          if (enemy.type == 'lucky') {
+            this.player.enterPowerUp()
+            const playerDiv = document.getElementById('player')
+            playerDiv.src = './attackSprites/atk0.png'
+
+            
+
+
+          }
+          else this.score--
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {
@@ -381,8 +415,10 @@ class Game {
     const randomize = Math.random() 
 
     this.enemies.push(randomize < 0.3 ?
-       new Angler1(this) : randomize < 0.6 ?
-       new Angler2(this) : new LuckyFish(this)) 
+       new Angler1(this) : randomize < 0.8 ?
+       new Angler2(this) : randomize  > 0.9 ? 
+       new LuckyFish(this) :
+       new LuckyFish(this)) 
   }  
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 
@@ -411,15 +447,15 @@ class Game {
     lastTime = timeStamp
 // this code block below will force 60FPS (for slower computers)
 
-    // const msNow = window.performance.now()
-    // const msPassed = msNow - msPrev       
+    const msNow = window.performance.now()
+    const msPassed = msNow - msPrev       
 
 
   
-    // if (msPassed < msPerFrame) return
+    if (msPassed < msPerFrame) return //this return statement will prevent requestAnimation from running more than 60FPS
   
-    // const excessTime = msPassed % msPerFrame
-    // msPrev = msNow - excessTime
+    const excessTime = msPassed % msPerFrame
+    msPrev = msNow - excessTime
  //---------------end of 60FPS enforcement------------------
 
     ctx.clearRect(0,0,canvas.width,canvas.height)

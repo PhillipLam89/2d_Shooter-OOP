@@ -49,7 +49,7 @@
     }
     draw(context) {
       context.fillStyle = 'yellow'
-      context.fillRect(this.x,this.y,this.width,this.height)
+      context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
   }
   class Particle {
@@ -127,7 +127,7 @@
 
     if (this.isPoweredUp) {
       context.drawImage(document.getElementById('player'),this.x,this.y, this.width,this.height)
-    }else context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width, this.height, this.x,this.y - 26, this.width,this.height)
+    }else context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width, this.height, this.x,this.y, this.width,this.height)
       
     }
     shootTop() {
@@ -371,10 +371,16 @@ class Game {
           if (enemy.type == 'lucky') {
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
-            playerDiv.src = './attackSprites/atk0.png'
+            playerDiv.src = './attackSprites/atk1.png'
 
-            
-
+            setTimeout(()=> playerDiv.src = './attackSprites/atk2.png',500)
+            setTimeout(()=> playerDiv.src = './attackSprites/atk3.png',1000)
+            setTimeout(()=> playerDiv.src = './attackSprites/atk4.png',1500)
+            setTimeout(()=> playerDiv.src = './attackSprites/atk5.png',2000)
+            setTimeout(()=> playerDiv.src = './attackSprites/atk2.png',2500)
+            setTimeout(()=> playerDiv.src = './attackSprites/atk3.png',3000)
+            setTimeout(()=> playerDiv.src = './attackSprites/atk4.png',3333)
+            setTimeout(()=> playerDiv.src = './attackSprites/atk5.png',4000)
 
           }
           else this.score--

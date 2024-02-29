@@ -293,13 +293,9 @@ class UI {
     context.font = this.fontSize + 'px ' + this.fontFamily
 
     //display score
+    context.fillStyle = 'chartreuse'
     context.fillText('Score: ' + this.game.score, 20, 70)
-    //ammo
-
-    for (let i = 0; i < this.game.ammo; i++) {
-      context.fillStyle = 'darkviolet'
-      context.fillRect(20 + 10 * i,10,3,20)
-    }
+    context.fillStyle = this.color
     //timer
     const formattedTime = ~~(this.game.gameTime * 0.001)
     context.fillText('Timer: ' + formattedTime + 's', 20, 100)
@@ -320,6 +316,12 @@ class UI {
       context.font = '25px ' + this.fontFamily
       context.fillText(msg2, this.game.width / 2, this.game.height * .5 - 50)
     }
+      //ammo
+
+      for (let i = 0; i < this.game.ammo; i++) {
+        context.fillStyle = 'darkviolet'
+        context.fillRect(20 + 10 * i,10,3,20)
+      }
     context.restore()
   }
 }

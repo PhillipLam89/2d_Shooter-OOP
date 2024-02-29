@@ -381,7 +381,6 @@ class Game {
             setTimeout(()=> playerDiv.src = './attackSprites/atk3.png',3000)
             setTimeout(()=> playerDiv.src = './attackSprites/atk4.png',3333)
             setTimeout(()=> playerDiv.src = './attackSprites/atk5.png',4000)
-
           }
           else this.score--
       }

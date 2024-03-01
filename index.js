@@ -72,6 +72,7 @@
       this.isPoweredUp = false
       this.powerUpTimer = 0
       this.powerUpLimit = 2222
+      this.bgIsNormalSpeed = true
     
     }
     update(deltaTime) {
@@ -105,9 +106,10 @@
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
-          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 3)
+          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 4.5)
           document.getElementById('player').src = './player.png'
           this.frameY = 0
+          this.bgIsNormalSpeed = true
         } else {
           this.powerUpTimer+= deltaTime
           this.frameY = 1
@@ -149,7 +151,10 @@
     }      
     }
     enterPowerUp() {
-      this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 3)
+      if (this.bgIsNormalSpeed) {
+        this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 4.5)
+        this.bgIsNormalSpeed = false
+      }
       this.powerUpTimer = 0
       this.isPoweredUp = true
       this.game.ammo = this.game.maxAmmo
@@ -339,7 +344,7 @@ class Game {
     this.keys = []
     this.enemies = []
     this.enemyTimer = 0
-    this.enemyInterval = 666
+    this.enemyInterval = 333
     this.ammo = 20
     this.maxAmmo = 40      
     this.ammoTimer = 0
@@ -371,6 +376,9 @@ class Game {
       if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true
           if (enemy.type == 'lucky') {
+            
+         
+            
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
             playerDiv.src = './attackSprites/atk1.png'
@@ -425,7 +433,7 @@ class Game {
 
     this.enemies.push(randomize < 0.3 ?
        new Angler1(this) : randomize < 0.8 ?
-       new Angler2(this) : randomize  > 0.9 ? 
+       new Angler2(this) : randomize  > 0.6 ? 
        new LuckyFish(this) :
        new Angler1(this)) 
   }  

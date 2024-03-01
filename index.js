@@ -105,6 +105,7 @@
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
+          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 3)
           document.getElementById('player').src = './player.png'
           this.frameY = 0
         } else {
@@ -148,6 +149,7 @@
     }      
     }
     enterPowerUp() {
+      this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 3)
       this.powerUpTimer = 0
       this.isPoweredUp = true
       this.game.ammo = this.game.maxAmmo
@@ -251,7 +253,7 @@ class Background { //pools the 4 Layer imgs together
     this.game = game
     this.images = [...document.querySelectorAll('.bgLayer')] //must convert to array so we can use map method below
     this.layers = this.images.map((img) => new Layer(this.game,img, .66))
-    this.lastLayer = new Layer(this.game, document.querySelector('.bgLayer4'), 0.55)
+    this.lastLayer = new Layer(this.game, document.querySelector('.bgLayer4'), .35)
     // this.image1 = document.querySelector('#layer1')
     // this.image2 = document.querySelector('#layer2')
     // this.image3 = document.querySelector('#layer3')
@@ -339,15 +341,15 @@ class Game {
     this.enemyTimer = 0
     this.enemyInterval = 666
     this.ammo = 20
-    this.maxAmmo = 60      
+    this.maxAmmo = 40      
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 555
+    this.ammoInterval = 300
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 5000 //5s to test
-    this.speed = 1.2
+    this.speed = 3.2
     this.debug = false
   }
   update(deltaTime) {
@@ -425,7 +427,7 @@ class Game {
        new Angler1(this) : randomize < 0.8 ?
        new Angler2(this) : randomize  > 0.9 ? 
        new LuckyFish(this) :
-       new LuckyFish(this)) 
+       new Angler1(this)) 
   }  
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 
@@ -471,5 +473,4 @@ class Game {
 
   }
   animate(0)
-
 

@@ -1,1 +1,1 @@
-just click the god damn link and try it out?
+click to play => https://philliplam89.github.io

@@ -17,6 +17,7 @@
               && !this.game.keys.includes(e.key)) {
                    this.game.keys.push(e.key)
           } else if (e.key == ' ') {
+           
             this.game.player.shootTop()
           } else if (e.key == 'z' || e.key == 'Z') {
             this.game.debug = !this.game.debug
@@ -71,8 +72,9 @@
       this.image = document.getElementById('player')
       this.isPoweredUp = false
       this.powerUpTimer = 0
-      this.powerUpLimit = 2222
+      this.powerUpLimit = 3000
       this.bgIsNormalSpeed = true
+      this.isShootingBullets = false
     
     }
     update(deltaTime) {
@@ -106,7 +108,7 @@
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
-          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 4.5)
+          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 3)
           document.getElementById('player').src = './player.png'
           this.frameY = 0
           this.bgIsNormalSpeed = true
@@ -129,8 +131,16 @@
     }) 
 
     if (this.isPoweredUp) {
-      context.drawImage(document.getElementById('player'),this.x,this.y, this.width,this.height)
-    }else context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width, this.height, this.x,this.y, this.width,this.height)
+      this.width = 175
+      this.height = 213
+      this.maxFrame = 5
+      context.drawImage(document.getElementById('player'), this.frameX * this.width, 0, this.width,this.height, this.x,this.y, this.width,this.height)
+    }else {
+      this.width = 120
+      this.height = 190  
+      this.maxFrame = 37   
+      context.drawImage(this.image, this.frameX * this.width, this.frameY * this.height, this.width, this.height, this.x,this.y, this.width,this.height)
+    }
       
     }
     shootTop() {
@@ -152,7 +162,7 @@
     }
     enterPowerUp() {
       if (this.bgIsNormalSpeed) {
-        this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 4.5)
+        this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 3)
         this.bgIsNormalSpeed = false
       }
       this.powerUpTimer = 0
@@ -344,7 +354,7 @@ class Game {
     this.keys = []
     this.enemies = []
     this.enemyTimer = 0
-    this.enemyInterval = 333
+    this.enemyInterval = 222
     this.ammo = 20
     this.maxAmmo = 40      
     this.ammoTimer = 0
@@ -381,16 +391,9 @@ class Game {
             
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
-            playerDiv.src = './attackSprites/atk1.png'
+            playerDiv.src = './empoweredPlayer 2.png'
 
-            setTimeout(()=> playerDiv.src = './attackSprites/atk2.png',500)
-            setTimeout(()=> playerDiv.src = './attackSprites/atk3.png',1000)
-            setTimeout(()=> playerDiv.src = './attackSprites/atk4.png',1500)
-            setTimeout(()=> playerDiv.src = './attackSprites/atk5.png',2000)
-            setTimeout(()=> playerDiv.src = './attackSprites/atk2.png',2500)
-            setTimeout(()=> playerDiv.src = './attackSprites/atk3.png',3000)
-            setTimeout(()=> playerDiv.src = './attackSprites/atk4.png',3333)
-            setTimeout(()=> playerDiv.src = './attackSprites/atk5.png',4000)
+
           }
           else this.score--
       }
@@ -435,7 +438,7 @@ class Game {
        new Angler1(this) : randomize < 0.8 ?
        new Angler2(this) : randomize  > 0.6 ? 
        new LuckyFish(this) :
-       new Angler1(this)) 
+       new LuckyFish(this) )
   }  
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 

@@ -50,7 +50,7 @@
       if (this.x >= this.game.width - (228*0.2)) this.markedForDeletion = true
     }
     draw(context) {
-      context.fillStyle = 'yellow'
+      context.fillStyle = 'cyan'
       context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
   }

@@ -17,7 +17,7 @@
               && !this.game.keys.includes(e.key)) {
                    this.game.keys.push(e.key)
           } else if (e.key == ' ') {
-           
+            this.game.player.isShootingBullets = true
             this.game.player.shootTop()
           } else if (e.key == 'z' || e.key == 'Z') {
             this.game.debug = !this.game.debug
@@ -26,6 +26,7 @@
 
         }
         window.onkeyup = (e) => {
+          if (e.key == ' ')this.game.player.isShootingBullets = false
           const keyFound = this.game.keys.indexOf(e.key) > -1
           keyFound && this.game.keys.splice(this.game.keys.indexOf(e.key),1)
 
@@ -131,10 +132,19 @@
     }) 
 
     if (this.isPoweredUp) {
-      this.width = 175
-      this.height = 213
-      this.maxFrame = 5
-      context.drawImage(document.getElementById('player'), this.frameX * this.width, 0, this.width,this.height, this.x,this.y, this.width,this.height)
+        if (this.isShootingBullets) {       
+          this.width = 175
+          this.height = 213
+          this.maxFrame = 5
+          document.getElementById('player').src = './empoweredPlayer 2.png'
+          context.drawImage(document.getElementById('player'), this.frameX * this.width, 0, this.width,this.height, this.x,this.y, this.width,this.height)
+        } else {
+          this.width =  117
+          this.height = 213
+          this.maxFrame = 7
+          document.getElementById('player').src = './walkingSprite.png'
+          context.drawImage(document.getElementById('player'), this.frameX * this.width, 0, this.width,this.height, this.x,this.y, this.width,this.height)
+        }
     }else {
       this.width = 120
       this.height = 190  
@@ -391,7 +401,7 @@ class Game {
             
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
-            playerDiv.src = './empoweredPlayer 2.png'
+            playerDiv.src = './walkingSprite.png'
 
 
           }

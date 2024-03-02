@@ -356,7 +356,7 @@ class UI {
       //ammo
 
       for (let i = 0; i < this.game.ammo; i++) {
-        context.fillStyle = 'darkviolet'
+        context.fillStyle = 'aqua'
         context.fillRect(20 + 10 * i,10,3,20)
       }
     context.restore()

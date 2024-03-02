@@ -68,7 +68,7 @@
       this.frameY = 0
       this.maxFrame = 37 //this is how many animations in our sprite
       this.speedY = 0 //since our game is moving horizontally
-      this.maxSpeed = 5
+      this.maxSpeed = 3
       this.projectiles = []
       this.image = document.getElementById('player')
       this.isPoweredUp = false
@@ -158,7 +158,7 @@
           this.projectiles.push(new Projectile(this.game, this.x , this.y ))
           this.game.ammo--
       } else if (this.isPoweredUp) {
-        this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.40))
+        this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.3))
         this.shootBottom()
       }
       
@@ -177,7 +177,7 @@
       }
       this.powerUpTimer = 0
       this.isPoweredUp = true
-      this.game.ammo = this.game.maxAmmo
+      this.game.ammo = ~~(this.game.maxAmmo * 0.85)
     }
   }
   class Enemy {
@@ -364,7 +364,7 @@ class Game {
     this.keys = []
     this.enemies = []
     this.enemyTimer = 0
-    this.enemyInterval = 222
+    this.enemyInterval = 450
     this.ammo = 20
     this.maxAmmo = 40      
     this.ammoTimer = 0
@@ -442,13 +442,18 @@ class Game {
     })
   }
   addEnemy() {
-    const randomize = Math.random() 
+    const randomize = Math.random() > .9
+    const randomize2 = Math.random()
 
-    this.enemies.push(randomize < 0.3 ?
-       new Angler1(this) : randomize < 0.8 ?
-       new Angler2(this) : randomize  > 0.6 ? 
-       new LuckyFish(this) :
-       new LuckyFish(this) )
+    this.enemies.push(
+      randomize ? new LuckyFish(this) : 
+      randomize2 > 0.5 ? new Angler1(this) : new Angler2(this)
+      // randomize < 0.3 ?
+      //  new Angler1(this) : randomize < 0.8 ?
+      //  new Angler2(this) : randomize  > 0.6 ? 
+      //  new LuckyFish(this) :
+      //  new Angler1(this )
+       )
   }  
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 
@@ -473,8 +478,7 @@ class Game {
     // if (game.player.y + game.player.height >= canvas.height) return
     window.requestAnimationFrame(animate)
 
-    const deltaTime = timeStamp - lastTime  
-    lastTime = timeStamp
+
 // this code block below will force 60FPS (for slower computers)
 
     const msNow = window.performance.now()
@@ -487,7 +491,8 @@ class Game {
     const excessTime = msPassed % msPerFrame
     msPrev = msNow - excessTime
  //---------------end of 60FPS enforcement------------------
-
+    const deltaTime = timeStamp - lastTime  
+    lastTime = timeStamp
     ctx.clearRect(0,0,canvas.width,canvas.height)
     game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
     game.draw(ctx)

@@ -73,7 +73,7 @@
       this.image = document.getElementById('player')
       this.isPoweredUp = false
       this.powerUpTimer = 0
-      this.powerUpLimit = 3000
+      this.powerUpLimit = 4399
       this.bgIsNormalSpeed = true
       this.isShootingBullets = false
     

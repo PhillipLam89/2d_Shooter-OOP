@@ -453,7 +453,7 @@ class Game {
     })
   }
   addEnemy() {
-    const youGotLucky = Math.random() > .85
+    const youGotLucky = Math.random() > .92
     const randomize = Math.random()
 
     this.enemies.push(

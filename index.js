@@ -223,7 +223,7 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
     super(game) // calling super here will make sure the Parent Class aka Enemy's constructor will run FIRST, THEN the Angler1 constructor runs
     this.width = 228 
     this.height = 169 
-    this.lives = 3
+    this.lives = 4
     this.score = this.lives
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = document.getElementById('angler1')
@@ -235,7 +235,7 @@ class Angler2 extends Enemy {
     super(game) 
     this.width = 213
     this.height = 165 
-    this.lives = 6
+    this.lives = 7
     this.score = this.lives
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = document.getElementById('angler2')
@@ -334,10 +334,17 @@ class UI {
       context.textAlign = 'center'
       let msg1
       let msg2
-      if (this.game.score >= this.game.winningScore) {
-        msg1 = 'You win!'
-        msg2 = 'Well Done!'
-      } else {
+      if (this.game.score > 0 && this.game.score < 25) {
+        msg1 = 'You win... but can do better'
+        msg2 = 'keep practing'
+      } else if (this.game.score >= 25 && this.game.score < 50) {
+        msg1 = 'Damn youre actually pretty good!'
+        msg2 = 'well done'
+      } else if (this.game.score >= 50) {
+        msg1 = 'HOLY CRAP'
+        msg2 = 'nerd...'        
+      }
+      else {
         msg1 = 'You Lose!'
         msg2 = 'You Suck, Try Again!'
       }
@@ -414,7 +421,7 @@ class Game {
         if (this.checkCollision(projectile, enemy)) {
             //marking for deletion will make removing easier
             projectile.markedForDeletion = true
-            enemy.lives--
+            enemy.lives-= 2
             
             if (enemy.type == 'lucky') this.score = this.score - 20
           
@@ -446,12 +453,12 @@ class Game {
     })
   }
   addEnemy() {
-    const randomize = Math.random() > .9
-    const randomize2 = Math.random()
+    const youGotLucky = Math.random() > .85
+    const randomize = Math.random()
 
     this.enemies.push(
-      randomize ? new LuckyFish(this) : 
-      randomize2 > 0.5 ? new Angler1(this) : new Angler2(this)
+      youGotLucky ? new LuckyFish(this) : 
+      randomize > 0.5 ? new Angler1(this) : new Angler2(this)
       // randomize < 0.3 ?
       //  new Angler1(this) : randomize < 0.8 ?
       //  new Angler2(this) : randomize  > 0.6 ? 

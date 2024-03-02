@@ -415,7 +415,7 @@ class Game {
 
 
           }
-          else this.score-=  enemy.lives*4
+          else this.score-=  enemy.lives*2
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {

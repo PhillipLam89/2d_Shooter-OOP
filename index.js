@@ -109,7 +109,7 @@
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
-          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 3)
+          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 5)
           document.getElementById('player').src = './player.png'
           this.frameY = 0
           this.bgIsNormalSpeed = true
@@ -172,7 +172,7 @@
     }
     enterPowerUp() {
       if (this.bgIsNormalSpeed) {
-        this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 3)
+        this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 5)
         this.bgIsNormalSpeed = false
       }
       this.powerUpTimer = 0

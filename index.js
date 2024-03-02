@@ -196,7 +196,7 @@
         this.x+= this.speedX - this.game.speed
         if (this.x + this.width < 0) {
           this.markedForDeletion = true
-          this.game.score--
+          this.game.score-=3
         }
         //sprite animation
 
@@ -334,13 +334,13 @@ class UI {
       context.textAlign = 'center'
       let msg1
       let msg2
-      if (this.game.score > 0 && this.game.score < 25) {
+      if (this.game.score > 0 && this.game.score < 100) {
         msg1 = 'You win... but can do better'
         msg2 = 'keep practing'
-      } else if (this.game.score >= 25 && this.game.score < 50) {
+      } else if (this.game.score >= 100 && this.game.score < 350) {
         msg1 = 'Damn youre actually pretty good!'
         msg2 = 'well done'
-      } else if (this.game.score >= 50) {
+      } else if (this.game.score >= 350) {
         msg1 = 'HOLY CRAP'
         msg2 = 'nerd...'        
       }
@@ -415,7 +415,7 @@ class Game {
 
 
           }
-          else this.score-=  ~~(enemy.lives*1.5)
+          else this.score-=  enemy.lives*2
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {

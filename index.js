@@ -376,7 +376,7 @@ class Game {
     this.enemyTimer = 0
     this.enemyInterval = 500
     this.ammo = 20
-    this.maxAmmo = 40      
+    this.maxAmmo = 30     
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500

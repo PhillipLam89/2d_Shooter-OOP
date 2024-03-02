@@ -194,7 +194,10 @@
       }
       update() {
         this.x+= this.speedX - this.game.speed
-        if (this.x + this.width < 0) this.markedForDeletion = true
+        if (this.x + this.width < 0) {
+          this.markedForDeletion = true
+          this.game.score--
+        }
         //sprite animation
 
       }
@@ -320,7 +323,7 @@ class UI {
     context.font = this.fontSize + 'px ' + this.fontFamily
 
     //display score
-    context.fillStyle = 'chartreuse'
+    context.fillStyle = this.game.score >= 0 ? 'chartreuse' : 'red'
     context.fillText('Score: ' + this.game.score, 20, 70)
     context.fillStyle = this.color
     //timer
@@ -364,7 +367,7 @@ class Game {
     this.keys = []
     this.enemies = []
     this.enemyTimer = 0
-    this.enemyInterval = 450
+    this.enemyInterval = 500
     this.ammo = 20
     this.maxAmmo = 40      
     this.ammoTimer = 0
@@ -373,13 +376,13 @@ class Game {
     this.ammoInterval = 300
     this.gameOver = false
     this.gameTime = 0
-    this.timeLimit = 5000 //5s to test
+    this.timeLimit = 1000 * 60  //5s to test
     this.speed = 3.2
     this.debug = false
   }
   update(deltaTime) {
     if (!this.gameOver) this.gameTime+= deltaTime
-    // if (this.gameTime >= this.timeLimit) this.gameOver = true
+    if (this.gameTime >= this.timeLimit) this.gameOver = true
 
     this.backGround.update()
     this.player.update(deltaTime) 
@@ -398,14 +401,14 @@ class Game {
           if (enemy.type == 'lucky') {
             
          
-            
+            this.score = this.score + 30
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
             playerDiv.src = './walkingSprite.png'
 
 
           }
-          else this.score--
+          else this.score-=  ~~(enemy.lives*1.5)
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {
@@ -413,6 +416,7 @@ class Game {
             projectile.markedForDeletion = true
             enemy.lives--
             
+            if (enemy.type == 'lucky') this.score = this.score - 20
           
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true

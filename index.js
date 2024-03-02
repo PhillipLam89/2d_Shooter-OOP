@@ -17,7 +17,7 @@
               && !this.game.keys.includes(e.key)) {
                    this.game.keys.push(e.key)
           } else if (e.key == ' ') {
-           
+            this.game.player.isShootingBullets = true
             this.game.player.shootTop()
           } else if (e.key == 'z' || e.key == 'Z') {
             this.game.debug = !this.game.debug
@@ -26,6 +26,7 @@
 
         }
         window.onkeyup = (e) => {
+          if (e.key == ' ')this.game.player.isShootingBullets = false
           const keyFound = this.game.keys.indexOf(e.key) > -1
           keyFound && this.game.keys.splice(this.game.keys.indexOf(e.key),1)
 
@@ -67,7 +68,7 @@
       this.frameY = 0
       this.maxFrame = 37 //this is how many animations in our sprite
       this.speedY = 0 //since our game is moving horizontally
-      this.maxSpeed = 5
+      this.maxSpeed = 3
       this.projectiles = []
       this.image = document.getElementById('player')
       this.isPoweredUp = false
@@ -131,10 +132,19 @@
     }) 
 
     if (this.isPoweredUp) {
-      this.width = 175
-      this.height = 213
-      this.maxFrame = 5
-      context.drawImage(document.getElementById('player'), this.frameX * this.width, 0, this.width,this.height, this.x,this.y, this.width,this.height)
+        if (this.isShootingBullets) {       
+          this.width = 175
+          this.height = 213
+          this.maxFrame = 5
+          document.getElementById('player').src = './empoweredPlayer 2.png'
+          context.drawImage(document.getElementById('player'), this.frameX * this.width, 0, this.width,this.height, this.x,this.y, this.width,this.height)
+        } else {
+          this.width =  117
+          this.height = 213
+          this.maxFrame = 7
+          document.getElementById('player').src = './walkingSprite.png'
+          context.drawImage(document.getElementById('player'), this.frameX * this.width, 0, this.width,this.height, this.x,this.y, this.width,this.height)
+        }
     }else {
       this.width = 120
       this.height = 190  
@@ -148,7 +158,7 @@
           this.projectiles.push(new Projectile(this.game, this.x , this.y ))
           this.game.ammo--
       } else if (this.isPoweredUp) {
-        this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.40))
+        this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.3))
         this.shootBottom()
       }
       
@@ -167,7 +177,7 @@
       }
       this.powerUpTimer = 0
       this.isPoweredUp = true
-      this.game.ammo = this.game.maxAmmo
+      this.game.ammo = ~~(this.game.maxAmmo * 0.85)
     }
   }
   class Enemy {
@@ -184,7 +194,10 @@
       }
       update() {
         this.x+= this.speedX - this.game.speed
-        if (this.x + this.width < 0) this.markedForDeletion = true
+        if (this.x + this.width < 0) {
+          this.markedForDeletion = true
+          this.game.score--
+        }
         //sprite animation
 
       }
@@ -310,7 +323,7 @@ class UI {
     context.font = this.fontSize + 'px ' + this.fontFamily
 
     //display score
-    context.fillStyle = 'chartreuse'
+    context.fillStyle = this.game.score >= 0 ? 'chartreuse' : 'red'
     context.fillText('Score: ' + this.game.score, 20, 70)
     context.fillStyle = this.color
     //timer
@@ -354,7 +367,7 @@ class Game {
     this.keys = []
     this.enemies = []
     this.enemyTimer = 0
-    this.enemyInterval = 222
+    this.enemyInterval = 500
     this.ammo = 20
     this.maxAmmo = 40      
     this.ammoTimer = 0
@@ -363,13 +376,13 @@ class Game {
     this.ammoInterval = 300
     this.gameOver = false
     this.gameTime = 0
-    this.timeLimit = 5000 //5s to test
+    this.timeLimit = 1000 * 60  //5s to test
     this.speed = 3.2
     this.debug = false
   }
   update(deltaTime) {
     if (!this.gameOver) this.gameTime+= deltaTime
-    // if (this.gameTime >= this.timeLimit) this.gameOver = true
+    if (this.gameTime >= this.timeLimit) this.gameOver = true
 
     this.backGround.update()
     this.player.update(deltaTime) 
@@ -388,14 +401,14 @@ class Game {
           if (enemy.type == 'lucky') {
             
          
-            
+            this.score = this.score + 30
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
-            playerDiv.src = './empoweredPlayer 2.png'
+            playerDiv.src = './walkingSprite.png'
 
 
           }
-          else this.score--
+          else this.score-=  ~~(enemy.lives*1.5)
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {
@@ -403,6 +416,7 @@ class Game {
             projectile.markedForDeletion = true
             enemy.lives--
             
+            if (enemy.type == 'lucky') this.score = this.score - 20
           
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true
@@ -432,13 +446,18 @@ class Game {
     })
   }
   addEnemy() {
-    const randomize = Math.random() 
+    const randomize = Math.random() > .9
+    const randomize2 = Math.random()
 
-    this.enemies.push(randomize < 0.3 ?
-       new Angler1(this) : randomize < 0.8 ?
-       new Angler2(this) : randomize  > 0.6 ? 
-       new LuckyFish(this) :
-       new LuckyFish(this) )
+    this.enemies.push(
+      randomize ? new LuckyFish(this) : 
+      randomize2 > 0.5 ? new Angler1(this) : new Angler2(this)
+      // randomize < 0.3 ?
+      //  new Angler1(this) : randomize < 0.8 ?
+      //  new Angler2(this) : randomize  > 0.6 ? 
+      //  new LuckyFish(this) :
+      //  new Angler1(this )
+       )
   }  
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 
@@ -463,8 +482,7 @@ class Game {
     // if (game.player.y + game.player.height >= canvas.height) return
     window.requestAnimationFrame(animate)
 
-    const deltaTime = timeStamp - lastTime  
-    lastTime = timeStamp
+
 // this code block below will force 60FPS (for slower computers)
 
     const msNow = window.performance.now()
@@ -477,7 +495,8 @@ class Game {
     const excessTime = msPassed % msPerFrame
     msPrev = msNow - excessTime
  //---------------end of 60FPS enforcement------------------
-
+    const deltaTime = timeStamp - lastTime  
+    lastTime = timeStamp
     ctx.clearRect(0,0,canvas.width,canvas.height)
     game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
     game.draw(ctx)

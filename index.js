@@ -421,7 +421,7 @@ class Game {
         if (this.checkCollision(projectile, enemy)) {
             //marking for deletion will make removing easier
             projectile.markedForDeletion = true
-            enemy.lives-= 2
+            enemy.lives--
             
             if (enemy.type == 'lucky') this.score = this.score - 20
           

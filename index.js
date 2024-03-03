@@ -43,6 +43,7 @@
       this.height = 13
       this.speed = 3
       this.markedForDeletion = false
+      this.image = projectileImg  //direct ID of the img element in html
     }
     update() {
       this.x+= this.speed
@@ -50,8 +51,9 @@
       if (this.x >= this.game.width - (228*0.2)) this.markedForDeletion = true
     }
     draw(context) {
-      context.fillStyle = 'yellow'
-      context.fillRect(this.x,this.y + 30,this.width,this.height)
+      context.drawImage(this.image,this.x,this.y)
+      // context.fillStyle = 'cyan'
+      // context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
   }
   class Particle {
@@ -73,7 +75,7 @@
       this.image = document.getElementById('player')
       this.isPoweredUp = false
       this.powerUpTimer = 0
-      this.powerUpLimit = 3000
+      this.powerUpLimit = 4399
       this.bgIsNormalSpeed = true
       this.isShootingBullets = false
     
@@ -109,7 +111,7 @@
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
-          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 3)
+          this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 5)
           document.getElementById('player').src = './player.png'
           this.frameY = 0
           this.bgIsNormalSpeed = true
@@ -172,7 +174,7 @@
     }
     enterPowerUp() {
       if (this.bgIsNormalSpeed) {
-        this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 3)
+        this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod * 5)
         this.bgIsNormalSpeed = false
       }
       this.powerUpTimer = 0
@@ -196,7 +198,7 @@
         this.x+= this.speedX - this.game.speed
         if (this.x + this.width < 0) {
           this.markedForDeletion = true
-          this.game.score--
+          this.game.score-=3
         }
         //sprite animation
 
@@ -223,7 +225,7 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
     super(game) // calling super here will make sure the Parent Class aka Enemy's constructor will run FIRST, THEN the Angler1 constructor runs
     this.width = 228 
     this.height = 169 
-    this.lives = 3
+    this.lives = 4
     this.score = this.lives
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = document.getElementById('angler1')
@@ -235,7 +237,7 @@ class Angler2 extends Enemy {
     super(game) 
     this.width = 213
     this.height = 165 
-    this.lives = 6
+    this.lives = 7
     this.score = this.lives
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = document.getElementById('angler2')
@@ -334,10 +336,17 @@ class UI {
       context.textAlign = 'center'
       let msg1
       let msg2
-      if (this.game.score >= this.game.winningScore) {
-        msg1 = 'You win!'
-        msg2 = 'Well Done!'
-      } else {
+      if (this.game.score > 0 && this.game.score < 100) {
+        msg1 = 'You win... but can do better'
+        msg2 = 'keep practing'
+      } else if (this.game.score >= 100 && this.game.score < 350) {
+        msg1 = 'Damn youre actually pretty good!'
+        msg2 = 'well done'
+      } else if (this.game.score >= 350) {
+        msg1 = 'HOLY CRAP'
+        msg2 = 'nerd...'        
+      }
+      else {
         msg1 = 'You Lose!'
         msg2 = 'You Suck, Try Again!'
       }
@@ -349,7 +358,7 @@ class UI {
       //ammo
 
       for (let i = 0; i < this.game.ammo; i++) {
-        context.fillStyle = 'darkviolet'
+        context.fillStyle = 'aqua'
         context.fillRect(20 + 10 * i,10,3,20)
       }
     context.restore()
@@ -369,11 +378,11 @@ class Game {
     this.enemyTimer = 0
     this.enemyInterval = 500
     this.ammo = 20
-    this.maxAmmo = 40      
+    this.maxAmmo = 30     
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 300
+    this.ammoInterval = 410
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
@@ -408,7 +417,7 @@ class Game {
 
 
           }
-          else this.score-=  ~~(enemy.lives*1.5)
+          else this.score-=  enemy.lives*2
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {
@@ -446,12 +455,12 @@ class Game {
     })
   }
   addEnemy() {
-    const randomize = Math.random() > .9
-    const randomize2 = Math.random()
+    const youGotLucky = Math.random() > .92
+    const randomize = Math.random()
 
     this.enemies.push(
-      randomize ? new LuckyFish(this) : 
-      randomize2 > 0.5 ? new Angler1(this) : new Angler2(this)
+      youGotLucky ? new LuckyFish(this) : 
+      randomize > 0.5 ? new Angler1(this) : new Angler2(this)
       // randomize < 0.3 ?
       //  new Angler1(this) : randomize < 0.8 ?
       //  new Angler2(this) : randomize  > 0.6 ? 
@@ -503,4 +512,3 @@ class Game {
 
   }
   animate(0)
-

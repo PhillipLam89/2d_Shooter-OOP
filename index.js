@@ -43,6 +43,7 @@
       this.height = 13
       this.speed = 3
       this.markedForDeletion = false
+      this.image = projectileImg  //direct ID of the img element in html
     }
     update() {
       this.x+= this.speed
@@ -50,8 +51,11 @@
       if (this.x >= this.game.width - (228*0.2)) this.markedForDeletion = true
     }
     draw(context) {
-      context.fillStyle = 'cyan'
-      context.fillRect(this.x,this.y + 30,this.width,this.height)
+
+      context.drawImage(this.image,this.x,this.y)
+      // context.fillStyle = 'cyan'
+      // context.fillRect(this.x,this.y + 30,this.width,this.height)
+
     }
   }
   class Particle {
@@ -510,4 +514,3 @@ class Game {
 
   }
   animate(0)
-

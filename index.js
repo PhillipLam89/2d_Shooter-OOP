@@ -51,7 +51,7 @@
       if (this.x >= this.game.width - (228*0.2)) this.markedForDeletion = true
     }
     draw(context) {
-      context.drawImage(this.image,this.x,this.y)
+      context.drawImage(this.image,this.x,this.y + 30)
       // context.fillStyle = 'cyan'
       // context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
@@ -72,6 +72,8 @@ class Particle {
       this.gravity = 0.5
       this.markedForDeletion = false
       this.angle = 0
+      this.bounced = false
+      this.bottomBounceBoundary = 100 // if particles reaches this '100px' from the bottom Y-coordinate, we bounce it
       this.verticalAcceleration = Math.random() * 0.2 - 0.1 //rotational speed of particle
 
     }
@@ -85,6 +87,9 @@ class Particle {
           this.x < 0 - this.size) {
             this.markedForDeletion = true //removes particles from game once bounced off screen
           }
+    }
+    draw(context) {
+      context.drawImage(this.image,this.frameX * this.spriteSize,this.frameY * this.spriteSize,this.spriteSize,this.spriteSize,this.x, this.y, this.size,this.size)
     }
 }
   class Player {
@@ -226,7 +231,7 @@ class Particle {
         this.x+= this.speedX - this.game.speed
         if (this.x + this.width < 0) {
           this.markedForDeletion = true
-          this.game.score-=3
+          this.game.score-=2
         }
         //sprite animation
 
@@ -255,7 +260,7 @@ class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that ca
     this.height = 169 
     this.lives = 4
     this.score = this.lives
-    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.y = Math.random() * (this.game.height  - this.game.player.height*0.5)
     this.image = document.getElementById('angler1')
     this.frameY = ~~(Math.random() * 3)
   }
@@ -267,7 +272,7 @@ class Angler2 extends Enemy {
     this.height = 165 
     this.lives = 7
     this.score = this.lives
-    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.y = Math.random() * (this.game.height  - this.game.player.height*0.5)
     this.image = document.getElementById('angler2')
     this.frameY = ~~(Math.random() * 2)
   }
@@ -403,6 +408,7 @@ class Game {
     this.ui = new UI(this)
     this.keys = []
     this.enemies = []
+    this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
     this.enemyInterval = 500
     this.ammo = 20
@@ -431,10 +437,21 @@ class Game {
     } else {
         this.ammoTimer+= deltaTime
     }
+               
+    // handle particles generation/deletion if enemy hits player
+    this.particles.forEach((particle) => particle.update())
+    this.particles = this.particles.filter(particle => !particle.markedForDeletion)
+
+    // handle enemies and check for collision w/ player and w/ projectiles
     this.enemies.forEach(enemy => {
       enemy.update(deltaTime)
       if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true
+          for (let i = 0; i < 4; i++) {
+            this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2))
+          }
+
+
           if (enemy.type == 'lucky') {
             
          
@@ -452,11 +469,16 @@ class Game {
             //marking for deletion will make removing easier
             projectile.markedForDeletion = true
             enemy.lives--
-            
+               //handle new particles below
+              for (let i = 0; i < 1; i++) {
+              this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2))
+            }
+          
             if (enemy.type == 'lucky') this.score = this.score - 20
           
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true
+
               if(!this.gameOver)this.score+= enemy.score
               if (this.score >= this.winningScore) this.gameOver = true
             }
@@ -478,6 +500,7 @@ class Game {
     this.player.draw(context) //note game.draw() will just call player.draw() passing in curent canvas we wanan draw on
     this.backGround.drawLastLayer(context)
     this.ui.draw(context)
+    this.particles.forEach(particle => particle.draw(context))
     this.enemies.forEach(enemy => {
       enemy.draw(context)
     })

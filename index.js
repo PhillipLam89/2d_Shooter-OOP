@@ -70,8 +70,8 @@ class Particle {
       this.gravity = 0.5
       this.markedForDeletion = false
       this.angle = 0
-      this.bounced = false
-      this.bottomBounceBoundary = 100 // if particles reaches this '100px' from the bottom Y-coordinate, we bounce it
+      this.bounced = 0
+      this.bottomBounceBoundary = Math.random() * 100 + 60 // if particles reaches this random px  from the bottom Y-coordinate, we bounce it
       this.verticalAcceleration = Math.random() * 0.2 - 0.1 //rotational speed of particle
 
     }
@@ -84,6 +84,11 @@ class Particle {
                     ||
           this.x < 0 - this.size) {
             this.markedForDeletion = true //removes particles from game once bounced off screen
+          }
+      if (this. y > this.game.height - this.bottomBounceBoundary &&
+          this.bounced < 2) { //determines how many times particles bounce
+            this.bounced++
+            this.speedY*= -0.5
           }
     }
     draw(context) {
@@ -313,7 +318,7 @@ class Background { //pools the 4 Layer imgs together
   constructor(game) {
     this.game = game
     this.images = [...document.querySelectorAll('.bgLayer')] //must convert to array so we can use map method below
-    this.layers = this.images.map((img) => new Layer(this.game,img, .66))
+    this.layers = this.images.map((img) => new Layer(this.game,img, 1.66))
     this.lastLayer = new Layer(this.game, document.querySelector('.bgLayer4'), .35)
     // this.image1 = document.querySelector('#layer1')
     // this.image2 = document.querySelector('#layer2')
@@ -453,14 +458,14 @@ class Game {
           if (enemy.type == 'lucky') {
             
          
-            this.score = this.score + 30
+            this.score = this.score + 35
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
             playerDiv.src = './walkingSprite.png'
 
 
           }
-          else this.score-=  enemy.lives*2
+          else this.score-=  ~~(enemy.lives * 1.6)
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {

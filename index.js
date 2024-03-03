@@ -56,9 +56,37 @@
       // context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
   }
-  class Particle {
+class Particle {
+    constructor(game,x,y) {
+      this.game = game
+      this.x = x
+      this.y = y
+      this.image = gearsImgs //id from <img> tag
+      this.frameX = ~~(Math.random() * 3) //gets random # between 0-2 for random gear images displayed
+      this.frameY = ~~(Math.random() * 3)
+      this.spriteSize = 50;
+      this.sizeModifier = (Math.random() * 0.5 + 0.5).toFixed(1)
+      this.size = this.spriteSize * this.sizeModifier
+      this.speedX = Math.random() * 6 - 3
+      this.speedY = Math.random() * -15 
+      this.gravity = 0.5
+      this.markedForDeletion = false
+      this.angle = 0
+      this.verticalAcceleration = Math.random() * 0.2 - 0.1 //rotational speed of particle
 
-  }
+    }
+    update() {
+      this.angle+= this.verticalAcceleration
+      this.speedY+= this.gravity
+      this.x-= this.speedX
+      this.y+= this.speedY 
+      if (this.y > this.game.height + this.size 
+                    ||
+          this.x < 0 - this.size) {
+            this.markedForDeletion = true //removes particles from game once bounced off screen
+          }
+    }
+}
   class Player {
     constructor(game) {
       this.game = game //passes in whole game obj

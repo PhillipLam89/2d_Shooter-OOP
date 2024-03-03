@@ -70,7 +70,7 @@
       this.frameY = 0
       this.maxFrame = 37 //this is how many animations in our sprite
       this.speedY = 0 //since our game is moving horizontally
-      this.maxSpeed = 3
+      this.maxSpeed = 5
       this.projectiles = []
       this.image = document.getElementById('player')
       this.isPoweredUp = false
@@ -83,11 +83,11 @@
     update(deltaTime) {
   
       if (this.game.keys.includes('ArrowUp')||this.game.keys.includes('w') ||this.game.keys.includes('W')) {
-          const isAtTop = this.y <= 0
+          const isAtTop = this.y + 0.7*this.height <= 0
           this.speedY = isAtTop ? 0 : this.maxSpeed * -1
       }
       else if (this.game.keys.includes('ArrowDown')||this.game.keys.includes('s') ||this.game.keys.includes('S')) {
-                const isAtBottom = this.height + this.y >= canvas.height  //returns true if player bottom touches game floor, then we do not allow further downward movement        
+                const isAtBottom = this.height + this.y - 0.5*this.height >= canvas.height  //returns true if player bottom touches game floor, then we do not allow further downward movement        
                 this.speedY = isAtBottom ? 0 : this.maxSpeed
       }
       else this.speedY = 0

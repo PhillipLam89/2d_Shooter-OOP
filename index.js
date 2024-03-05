@@ -73,14 +73,14 @@ class Particle {
       this.markedForDeletion = false
       this.angle = 0
       this.bounced = 0
-      this.bottomBounceBoundary = Math.random() * 100 + 60 // if particles reaches this random px  from the bottom Y-coordinate, we bounce it
+      this.bottomBounceBoundary = Math.random() * 80 + 60 // if particles reaches this random px  from the bottom Y-coordinate, we bounce it
       this.verticalAcceleration = Math.random() * 0.2 - 0.1 //rotational speed of particle
 
     }
     update() {
       this.angle+= this.verticalAcceleration
       this.speedY+= this.gravity
-      this.x-= this.speedX
+      this.x-= this.speedX + this.game.speed
       this.y+= this.speedY 
       if (this.y > this.game.height + this.size 
                     ||
@@ -94,7 +94,12 @@ class Particle {
           }
     }
     draw(context) {
-      context.drawImage(this.image,this.frameX * this.spriteSize,this.frameY * this.spriteSize,this.spriteSize,this.spriteSize,this.x, this.y, this.size,this.size)
+      context.save() //to make sure that particle rotation only applies to each ONE of them
+      context.translate(this.x,this.y) //calling translate moves the default rotation coords from (0,0) to whatever you specify
+      context.rotate(this.angle) //rotate takes angles in RADIANS
+      context.drawImage(this.image,this.frameX * this.spriteSize,this.frameY * this.spriteSize,this.spriteSize,this.spriteSize,this.size * -0.5, this.size * -0.5, this.size,this.size)
+
+      context.restore() //restores canvas state aka settings
     }
 }
   class Player {
@@ -217,14 +222,14 @@ class Particle {
       }
       this.powerUpTimer = 0
       this.isPoweredUp = true
-      this.game.ammo = ~~(this.game.maxAmmo * 0.85)
+      if(this.game.ammo < ~~(this.game.maxAmmo * 0.75)) this.game.ammo = ~~(this.game.maxAmmo * 0.85)
     }
   }
   class Enemy {
       constructor(game) {
         this.game = game
         this.x = this.game.width
-        this.speedX = Math.random() * - 0.34
+        this.speedX = Math.random() * -4
         this.markedForDeletion = false
 
         this.frameX = 0
@@ -288,11 +293,41 @@ class LuckyFish extends Enemy {
     this.width = 99
     this.height = 95 
     this.lives = 2
-    this.score = this.lives * 5
+    this.score = 30
     this.type = 'lucky'
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = document.getElementById('lucky')
     this.frameY = ~~(Math.random() * 2)
+  } 
+}
+class HiveWhale extends Enemy {
+  constructor(game) { 
+    super(game) 
+    this.width = 400
+    this.height = 227 
+    this.lives = 15
+    this.score = this.lives * 5
+    this.type = 'hive'
+    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.image = hiveWhaleImg
+    this.frameY = 0
+    this.speedX = Math.random() * -0.4
+  } 
+}
+class Drone extends Enemy {
+  constructor(game,x,y) {  //x,y are the coordiantes of the destroyed Hivewhale, from which these drones will spawn!
+    super(game) 
+    this.width = 115
+    this.height = 95
+    this.x = x
+    this.y = y 
+    this.lives = 3
+    this.score = this.lives
+    this.type = 'drone'
+    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.image = droneImgs
+    this.frameY = ~~(Math.random()*2)
+    this.speedX = Math.random() * -6 - 2
   } 
 }
 class Layer { //sets up all 4 layer images 
@@ -346,6 +381,50 @@ class Background { //pools the 4 Layer imgs together
   drawLastLayer(ctx) {
     this.lastLayer.draw(ctx)
   }
+}
+class Explosion {
+  constructor(game,x,y) {
+    this.game = game
+    this.x = x
+    this.y = y
+    this.frameX = 0
+    this.spriteHeight = 200 // since all explosion imgs have same height, we can set height in the parent class :D
+    this.fps = 15
+    this.timer = 0
+    this.interval = 1000 / this.fps
+    this.markedForDeletion = false
+    this.maxFrame = 8
+  }
+  update(deltaTime) {
+    this.frameX++
+    if (this.frameX > this.maxFrame) this.markedForDeletion = true
+  }
+  draw(context) {
+    context.drawImage(this.image, 
+      this.frameX * this.spriteWidth,
+      0,
+      this.spriteWidth, 
+      this.spriteHeight, 
+      this.x, 
+      this.y,
+      this.width,
+      this.height)
+  }
+}
+class SmokeExplosion extends Explosion {
+  constructor(game,x,y) {
+    super(game,x,y)
+    this.image = smokeExplosionImgs
+    this.spriteWidth = 200
+    this.width = this.spriteWidth
+    this.height = this.spriteHeight
+    this.x = x - this.width * 0.5
+    this.y = y - this.height * 0.5
+
+  }
+}
+class FireExplosion extends Explosion {
+
 }
 class UI {
   constructor(game) {
@@ -412,20 +491,21 @@ class Game {
     this.input = new InputHandler(this)
     this.ui = new UI(this)
     this.keys = []
+    this.explosions = []
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 500
+    this.enemyInterval = 456
     this.ammo = 20
-    this.maxAmmo = 30     
+    this.maxAmmo = 35    
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 410
+    this.ammoInterval = 500
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
-    this.speed = 3.2
+    this.speed = 2.2
     this.debug = false
   }
   update(deltaTime) {
@@ -446,12 +526,15 @@ class Game {
     // handle particles generation/deletion if enemy hits player
     this.particles.forEach((particle) => particle.update())
     this.particles = this.particles.filter(particle => !particle.markedForDeletion)
-
+    // handle explosions
+    this.explosions.forEach(ex => ex.update())
+    this.explosions = this.explosions.filter(ex => !ex.markedForDeletion)
     // handle enemies and check for collision w/ player and w/ projectiles
     this.enemies.forEach(enemy => {
       enemy.update(deltaTime)
       if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true
+          this.addExplosion(enemy)
           for (let i = 0; i < 4; i++) {
             this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2))
           }
@@ -483,7 +566,13 @@ class Game {
           
             if (enemy.lives <= 0) {
               enemy.markedForDeletion = true
-
+              this.addExplosion(enemy)
+              if (enemy.type == 'hive') {
+                  for (let i = 0; i < 5; i++) { //will spawn 5 (or however many) drones upon killing a hive-whale (with bullets only)
+                    this.enemies.push(new Drone(this, enemy.x + Math.random() * enemy.width, enemy.y * Math.random() * 0.5 * enemy.height)) //each drone will spawn in a random (x,y) coordinate WITHIN its hivewhale parent's width/height
+                  }
+                  
+              }
               if(!this.gameOver)this.score+= enemy.score
               if (this.score >= this.winningScore) this.gameOver = true
             }
@@ -501,18 +590,23 @@ class Game {
     this.enemies = this.enemies.filter(enemy => !enemy.markedForDeletion) //removes ALL marked-for-delete enemies if they pass the collision check
   }
   draw(context) {
-    this.backGround.draw(context) //background must be drawn first so it is in the BACK of the player
+    this.backGround.draw(context) //background must be drawn first so it is in the BACK of the player 
     this.player.draw(context) //note game.draw() will just call player.draw() passing in curent canvas we wanan draw on
-    this.backGround.drawLastLayer(context)
     this.ui.draw(context)
     this.particles.forEach(particle => particle.draw(context))
+
     this.enemies.forEach(enemy => {
       enemy.draw(context)
     })
+    this.explosions.forEach(ex => { //note that explosions are drawn AFTER enemies are, so explosions will be on top
+      ex.draw(context)
+    })
+    this.backGround.drawLastLayer(context)
   }
   addEnemy() {
     const youGotLucky = Math.random() > .92
     const randomize = Math.random()
+    const spawnHive = Math.random() < 0.1
 
     this.enemies.push(
       youGotLucky ? new LuckyFish(this) : 
@@ -523,7 +617,13 @@ class Game {
       //  new LuckyFish(this) :
       //  new Angler1(this )
        )
+     spawnHive && this.enemies.push(new HiveWhale(this))
+    
   }  
+  addExplosion(enemy) {
+    const randomized = Math.random()
+    if(randomized < 1) this.explosions.push(new SmokeExplosion(this, enemy.x,enemy.y))
+  }
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 
       rect1.x < rect2.x + rect2.width &&

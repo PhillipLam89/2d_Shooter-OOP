@@ -16,6 +16,6 @@
   min-width: 100dvw;
   min-height: 100dvh;
 }
-#layer1,#layer2,#layer3,#layer4,#player,#angler1,#gearsImg,#angler2,#lucky,.hide, #projectileImg {
+#layer1,#layer2,#smokeExplosionImgs,#layer3,#layer4,#player,#hiveWhaleImg,#angler1,#gearsImg,#angler2,#lucky,.hide, #projectileImg {
   display: none;
 }

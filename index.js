@@ -52,6 +52,8 @@
     }
     draw(context) {
       context.drawImage(this.image,this.x,this.y + 30)
+      // context.fillStyle = 'cyan'
+      // context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
   }
 class Particle {
@@ -121,7 +123,7 @@ class Particle {
       this.isShootingBullets = false
       //variables below will allow us to animate walking animations at 10fps
       this.timer = 0
-      this.fps = 6
+      this.fps = 5
       this.interval = 1000 / this.fps
     
     }
@@ -146,7 +148,7 @@ class Particle {
       this.projectiles = this.projectiles.filter(projectile => !projectile.markedForDeletion)
       // handle sprite animation
 
-      if (!this.image.src.includes('walking')) {
+      if (this.image.src.includes('player.png')) {
             if (this.frameX < this.maxFrame) this.frameX++
             else this.frameX = 0
       } else { //code below this line will FORCE the walking animation to be the same FPS as this.fps
@@ -681,8 +683,9 @@ class Game {
     const deltaTime = timeStamp - lastTime  
     lastTime = timeStamp
     ctx.clearRect(0,0,canvas.width,canvas.height)
-    game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
     game.draw(ctx)
+    game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
+   
 
   }
   animate(0)

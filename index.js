@@ -121,6 +121,10 @@ class Particle {
       this.powerUpLimit = 4399
       this.bgIsNormalSpeed = true
       this.isShootingBullets = false
+      //variables below will allow us to animate walking animations at 10fps
+      this.timer = 0
+      this.fps = 6
+      this.interval = 1000 / this.fps
     
     }
     update(deltaTime) {
@@ -144,13 +148,27 @@ class Particle {
       this.projectiles = this.projectiles.filter(projectile => !projectile.markedForDeletion)
       // handle sprite animation
 
+      if (!this.image.src.includes('walking')) {
+            if (this.frameX < this.maxFrame) this.frameX++
+            else this.frameX = 0
+      } else { //code below this line will FORCE the walking animation to be the same FPS as this.fps
 
-      if (this.frameX < this.maxFrame) this.frameX++
-      else this.frameX = 0
+          if (this.frameX >= this.maxFrame) {
+            this.frameX = 0
+            this.timer = 0
+          }
+        
+            if (this.timer >= this.interval) this.frameX++
+            else this.timer+= deltaTime        
+      }
+
 
       //handle power up
 
       if (this.isPoweredUp) {
+        if (!this.isShootingBullets) { // aka while powered up but walking, not shooting
+            
+        }
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
@@ -389,14 +407,16 @@ class Explosion {
     this.y = y
     this.frameX = 0
     this.spriteHeight = 200 // since all explosion imgs have same height, we can set height in the parent class :D
-    this.fps = 15
+    this.fps = 15 //we set this because we WANT the explosion animations to only run at 15 fps, and not the default 60fps
     this.timer = 0
     this.interval = 1000 / this.fps
     this.markedForDeletion = false
     this.maxFrame = 8
   }
   update(deltaTime) {
-    this.frameX++
+    if (this.timer >= this.interval) this.frameX++
+    else this.timer+= deltaTime
+    
     if (this.frameX > this.maxFrame) this.markedForDeletion = true
   }
   draw(context) {
@@ -527,7 +547,7 @@ class Game {
     this.particles.forEach((particle) => particle.update())
     this.particles = this.particles.filter(particle => !particle.markedForDeletion)
     // handle explosions
-    this.explosions.forEach(ex => ex.update())
+    this.explosions.forEach(ex => ex.update(deltaTime))
     this.explosions = this.explosions.filter(ex => !ex.markedForDeletion)
     // handle enemies and check for collision w/ player and w/ projectiles
     this.enemies.forEach(enemy => {

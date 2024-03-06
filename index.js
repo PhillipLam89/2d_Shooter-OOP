@@ -43,7 +43,7 @@
       this.height = 13
       this.speed = 3
       this.markedForDeletion = false
-      this.image = projectileImg  //direct ID of the img element in html
+      this.image = projectileImgs  //direct ID of the img element in html
     }
     update() {
       this.x+= this.speed
@@ -123,7 +123,7 @@ class Particle {
       this.isShootingBullets = false
       //variables below will allow us to animate walking animations at 10fps
       this.timer = 0
-      this.fps = 6
+      this.fps = 5
       this.interval = 1000 / this.fps
     
     }
@@ -148,7 +148,7 @@ class Particle {
       this.projectiles = this.projectiles.filter(projectile => !projectile.markedForDeletion)
       // handle sprite animation
 
-      if (!this.image.src.includes('walking')) {
+      if (this.image.src.includes('player.png')) {
             if (this.frameX < this.maxFrame) this.frameX++
             else this.frameX = 0
       } else { //code below this line will FORCE the walking animation to be the same FPS as this.fps
@@ -324,12 +324,25 @@ class HiveWhale extends Enemy {
     this.width = 400
     this.height = 227 
     this.lives = 15
-    this.score = this.lives * 5
+    this.score = this.lives * 2
     this.type = 'hive'
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = hiveWhaleImg
     this.frameY = 0
     this.speedX = Math.random() * -0.4
+  } 
+}
+class BulbWhale extends Enemy {
+  constructor(game) { 
+    super(game) 
+    this.width = 270
+    this.height = 219 
+    this.lives = 22
+    this.score = this.lives * 2
+    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.image = bulbWhaleImgs
+    this.frameY = ~~(Math.random() * 2)
+    this.speedX = Math.random() * -5
   } 
 }
 class Drone extends Enemy {
@@ -407,13 +420,14 @@ class Explosion {
     this.y = y
     this.frameX = 0
     this.spriteHeight = 200 // since all explosion imgs have same height, we can set height in the parent class :D
-    this.fps = 15 //we set this because we WANT the explosion animations to only run at 15 fps, and not the default 60fps
+    this.fps = 30 //we set this because we WANT the explosion animations to only run at 15 fps, and not the default 60fps
     this.timer = 0
     this.interval = 1000 / this.fps
     this.markedForDeletion = false
     this.maxFrame = 8
   }
   update(deltaTime) {
+    // this.x-= this.game.speed
     if (this.timer >= this.interval) this.frameX++
     else this.timer+= deltaTime
     
@@ -444,7 +458,16 @@ class SmokeExplosion extends Explosion {
   }
 }
 class FireExplosion extends Explosion {
+  constructor(game,x,y) {
+    super(game,x,y)
+    this.image = fireExplosionImgs
+    this.spriteWidth = 200
+    this.width = this.spriteWidth
+    this.height = this.spriteHeight
+    this.x = x - this.width * 0.5
+    this.y = y - this.height * 0.5
 
+  }
 }
 class UI {
   constructor(game) {
@@ -515,17 +538,17 @@ class Game {
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 456
-    this.ammo = 20
-    this.maxAmmo = 35    
+    this.enemyInterval = 666
+    this.ammo = 30
+    this.maxAmmo = 50    
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 500
+    this.ammoInterval = 444
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
-    this.speed = 2.2
+    this.speed = 1.2
     this.debug = false
   }
   update(deltaTime) {
@@ -570,7 +593,7 @@ class Game {
 
 
           }
-          else this.score-=  ~~(enemy.lives * 1.6)
+          else if (!this.gameOver) this.score-= enemy.lives * 2  // so colliding with enemies or killing enemies after gameover screen would NOT affect our score
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {
@@ -588,6 +611,7 @@ class Game {
               enemy.markedForDeletion = true
               this.addExplosion(enemy)
               if (enemy.type == 'hive') {
+     
                   for (let i = 0; i < 5; i++) { //will spawn 5 (or however many) drones upon killing a hive-whale (with bullets only)
                     this.enemies.push(new Drone(this, enemy.x + Math.random() * enemy.width, enemy.y * Math.random() * 0.5 * enemy.height)) //each drone will spawn in a random (x,y) coordinate WITHIN its hivewhale parent's width/height
                   }
@@ -628,6 +652,8 @@ class Game {
     const randomize = Math.random()
     const spawnHive = Math.random() < 0.1
 
+    const spawnBulbWhale = Math.random() > 0.85
+
     this.enemies.push(
       youGotLucky ? new LuckyFish(this) : 
       randomize > 0.5 ? new Angler1(this) : new Angler2(this)
@@ -638,11 +664,18 @@ class Game {
       //  new Angler1(this )
        )
      spawnHive && this.enemies.push(new HiveWhale(this))
+     spawnBulbWhale && this.enemies.push(new BulbWhale(this))
     
   }  
   addExplosion(enemy) {
-    const randomized = Math.random()
-    if(randomized < 1) this.explosions.push(new SmokeExplosion(this, enemy.x,enemy.y))
+    const smokeExplosionGenerated = Math.random() > 0.7
+    this.explosions.push(
+      smokeExplosionGenerated ? new SmokeExplosion(this, enemy.x + enemy.width / 2,enemy.y + enemy.height / 2) 
+                                                 :
+      new FireExplosion(this, enemy.x + enemy.width / 2,enemy.y + enemy.height / 2) 
+     ) 
+      //this makes sure the explosions get drawn at the CENTER of each enemy)
+
   }
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 
@@ -658,8 +691,8 @@ class Game {
   let lastTime = 0
 
   let msPrev = window.performance.now()
-  let fps = 60
-  let msPerFrame = 1000 / fps
+  let FPS_CAP = 60
+  let msPerFrame = 1000 / FPS_CAP
 
 
   function animate(timeStamp) {
@@ -683,8 +716,9 @@ class Game {
     const deltaTime = timeStamp - lastTime  
     lastTime = timeStamp
     ctx.clearRect(0,0,canvas.width,canvas.height)
-    game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
     game.draw(ctx)
+    game.update(deltaTime) //note this ALSO calls game.player.draw(), spawns projectiles on space-bar press, checks for collision between players/enemies and ALSO projectiles against all current enemies
+   
 
   }
   animate(0)

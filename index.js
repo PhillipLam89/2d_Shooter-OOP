@@ -172,6 +172,7 @@ class Particle {
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
+          if (this.game.ammo > this.game.maxAmmo) this.game.ammo = this.game.maxAmmo //deletes any extra ammos gained during power-up
           this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 5)
           document.getElementById('player').src = './player.png'
           this.frameY = 0
@@ -179,7 +180,7 @@ class Particle {
         } else {
           this.powerUpTimer+= deltaTime
           this.frameY = 1
-          this.game.ammo+= 0.1 //extra ammo recharge speed during powerUp mode :D
+          this.game.ammo+= 0.1 //extra ammo recharge speed during powerUp mode :D allowed to go over max ammo
         }
       } 
     }
@@ -518,8 +519,9 @@ class UI {
       //ammo
 
       for (let i = 0; i < this.game.ammo; i++) {
-        context.fillStyle = 'aqua'
+        context.fillStyle =  i > this.game.maxAmmo ? 'red' : 'aqua'
         context.fillRect(20 + 10 * i,10,3,20)
+
       }
     context.restore()
   }
@@ -538,13 +540,13 @@ class Game {
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 666
+    this.enemyInterval = 777
     this.ammo = 30
     this.maxAmmo = 50    
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 444
+    this.ammoInterval = 400
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
@@ -650,9 +652,9 @@ class Game {
   addEnemy() {
     const youGotLucky = Math.random() > .92
     const randomize = Math.random()
-    const spawnHive = Math.random() < 0.1
+    const spawnHive = Math.random() < 0.18
 
-    const spawnBulbWhale = Math.random() > 0.85
+    const spawnBulbWhale = Math.random() > 0.95
 
     this.enemies.push(
       youGotLucky ? new LuckyFish(this) : 

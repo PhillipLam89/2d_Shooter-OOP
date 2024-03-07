@@ -12,3 +12,9 @@
 .hide,.bgLayer,.bgLayer4{
   display: none;
 }
+#muteBtn {
+  z-index: 5;
+  position: absolute;
+  right: 5%;
+  top: 10%;
+}

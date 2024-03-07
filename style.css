@@ -1,21 +1,14 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-#canvas1 {
 
-  border: 5px solid black;
+#canvas1 {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: turquoise;
   max-width: 100%;
   max-height: 100%;
   min-width: 100dvw;
   min-height: 100dvh;
 }
-#layer1,#layer2,#smokeExplosionImgs,#layer3,#layer4,#player,#hiveWhaleImg,#angler1,#gearsImg,#angler2,#lucky,.hide, #projectileImg {
+.hide,.bgLayer,.bgLayer4{
   display: none;
 }

@@ -43,7 +43,7 @@
       this.height = 13
       this.speed = 3
       this.markedForDeletion = false
-      this.image = projectileImg  //direct ID of the img element in html
+      this.image = projectileImgs  //direct ID of the img element in html
     }
     update() {
       this.x+= this.speed
@@ -172,6 +172,7 @@ class Particle {
         if(this.powerUpTimer >= this.powerUpLimit) {
           this.powerUpTimer = 0
           this.isPoweredUp = false
+          if (this.game.ammo > this.game.maxAmmo) this.game.ammo = this.game.maxAmmo //deletes any extra ammos gained during power-up
           this.game.backGround.layers.forEach(layer => layer.speedMod = layer.speedMod / 5)
           document.getElementById('player').src = './player.png'
           this.frameY = 0
@@ -179,7 +180,7 @@ class Particle {
         } else {
           this.powerUpTimer+= deltaTime
           this.frameY = 1
-          this.game.ammo+= 0.1 //extra ammo recharge speed during powerUp mode :D
+          this.game.ammo+= 0.1 //extra ammo recharge speed during powerUp mode :D allowed to go over max ammo
         }
       } 
     }
@@ -220,7 +221,9 @@ class Particle {
       if (this.game.ammo > 0 && !this.isPoweredUp)  {
           this.projectiles.push(new Projectile(this.game, this.x , this.y ))
           this.game.ammo--
-      } else if (this.isPoweredUp) {
+      }
+      this.game.sound.shot()
+      if (this.isPoweredUp) {
         this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.3))
         this.shootBottom()
       }
@@ -241,6 +244,7 @@ class Particle {
       this.powerUpTimer = 0
       this.isPoweredUp = true
       if(this.game.ammo < ~~(this.game.maxAmmo * 0.75)) this.game.ammo = ~~(this.game.maxAmmo * 0.85)
+      this.game.sound.powerUp()
     }
   }
   class Enemy {
@@ -324,12 +328,25 @@ class HiveWhale extends Enemy {
     this.width = 400
     this.height = 227 
     this.lives = 15
-    this.score = this.lives * 5
+    this.score = this.lives * 2
     this.type = 'hive'
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = hiveWhaleImg
     this.frameY = 0
     this.speedX = Math.random() * -0.4
+  } 
+}
+class BulbWhale extends Enemy {
+  constructor(game) { 
+    super(game) 
+    this.width = 270
+    this.height = 219 
+    this.lives = 17
+    this.score = this.lives * 2
+    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.image = bulbWhaleImgs
+    this.frameY = ~~(Math.random() * 2)
+    this.speedX = Math.random() * -5
   } 
 }
 class Drone extends Enemy {
@@ -346,6 +363,20 @@ class Drone extends Enemy {
     this.image = droneImgs
     this.frameY = ~~(Math.random()*2)
     this.speedX = Math.random() * -6 - 2
+  } 
+}
+class MoonFish extends Enemy {
+  constructor(game) { 
+    super(game) 
+    this.width = 227
+    this.height = 240 
+    this.lives = 25
+    this.score = this.lives * 2
+    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.image = moonFishImgs
+    this.frameY = ~~(Math.random() * 2)
+    this.speedX = Math.random() * -0.35
+    this.type = 'moon'
   } 
 }
 class Layer { //sets up all 4 layer images 
@@ -407,13 +438,14 @@ class Explosion {
     this.y = y
     this.frameX = 0
     this.spriteHeight = 200 // since all explosion imgs have same height, we can set height in the parent class :D
-    this.fps = 15 //we set this because we WANT the explosion animations to only run at 15 fps, and not the default 60fps
+    this.fps = 30 //we set this because we WANT the explosion animations to only run at 15 fps, and not the default 60fps
     this.timer = 0
     this.interval = 1000 / this.fps
     this.markedForDeletion = false
     this.maxFrame = 8
   }
   update(deltaTime) {
+    // this.x-= this.game.speed
     if (this.timer >= this.interval) this.frameX++
     else this.timer+= deltaTime
     
@@ -443,8 +475,51 @@ class SmokeExplosion extends Explosion {
 
   }
 }
+class SoundController {
+  constructor() {
+    this.powerUpSound = powerUpSoundFile
+    this.powerDownSound = powerDownSoundFile
+    this.explosionSound = explosionSoundFile
+    this.hitSound = hitTargetSoundFile
+    this.shotSound = bulletShotSoundFile
+    this.shieldSound = shieldSoundFile
+  }
+  powerUp() {
+    this.powerUpSound.currentTime = 0 //rewinds sound file to 0:00
+    this.powerUpSound.play()
+  }
+  powerDown() {
+    this.powerDownSound.currentTime = 0 //rewinds sound file to 0:00
+    this.powerDownSound.play()
+  }
+  hitTarget() {
+    this.hitSound.currentTime = 0 //rewinds sound file to 0:00
+    this.hitSound.play()   
+  }
+  explosion() {
+    this.explosionSound.currentTime = 0 //rewinds sound file to 0:00
+    this.explosionSound.play()
+  }
+  shot() {
+    this.shotSound.currentTime = 0 //rewinds sound file to 0:00
+    this.shotSound.play()
+  }
+  shield() {
+    this.shieldSound.currentTime = 0 //rewinds sound file to 0:00
+    this.shieldSound.play()
+  }
+}
 class FireExplosion extends Explosion {
+  constructor(game,x,y) {
+    super(game,x,y)
+    this.image = fireExplosionImgs
+    this.spriteWidth = 200
+    this.width = this.spriteWidth
+    this.height = this.spriteHeight
+    this.x = x - this.width * 0.5
+    this.y = y - this.height * 0.5
 
+  }
 }
 class UI {
   constructor(game) {
@@ -495,8 +570,9 @@ class UI {
       //ammo
 
       for (let i = 0; i < this.game.ammo; i++) {
-        context.fillStyle = 'aqua'
+        context.fillStyle =  i > this.game.maxAmmo ? 'red' : 'aqua'
         context.fillRect(20 + 10 * i,10,3,20)
+
       }
     context.restore()
   }
@@ -511,21 +587,22 @@ class Game {
     this.input = new InputHandler(this)
     this.ui = new UI(this)
     this.keys = []
+    this.sound = new SoundController()
     this.explosions = []
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 456
-    this.ammo = 20
-    this.maxAmmo = 35    
+    this.enemyInterval = 777
+    this.ammo = 30
+    this.maxAmmo = 50    
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 500
+    this.ammoInterval = 333
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
-    this.speed = 2.2
+    this.speed = 1.2
     this.debug = false
   }
   update(deltaTime) {
@@ -555,11 +632,12 @@ class Game {
       if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true
           this.addExplosion(enemy)
+          this.sound.shield()
           for (let i = 0; i < 4; i++) {
             this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2))
           }
 
-
+     
           if (enemy.type == 'lucky') {
             
          
@@ -570,24 +648,27 @@ class Game {
 
 
           }
-          else this.score-=  ~~(enemy.lives * 1.6)
+          else if (!this.gameOver) this.score-= enemy.lives * 2  // so colliding with enemies or killing enemies after gameover screen would NOT affect our score
       }
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {
             //marking for deletion will make removing easier
+            this.sound.hitTarget()
             projectile.markedForDeletion = true
             enemy.lives--
                //handle new particles below
               for (let i = 0; i < 1; i++) {
               this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2))
             }
-          
+            if (enemy.type == 'moon') this.player.enterPowerUp()
             if (enemy.type == 'lucky') this.score = this.score - 20
           
             if (enemy.lives <= 0) {
+              this.sound.explosion()
               enemy.markedForDeletion = true
               this.addExplosion(enemy)
               if (enemy.type == 'hive') {
+     
                   for (let i = 0; i < 5; i++) { //will spawn 5 (or however many) drones upon killing a hive-whale (with bullets only)
                     this.enemies.push(new Drone(this, enemy.x + Math.random() * enemy.width, enemy.y * Math.random() * 0.5 * enemy.height)) //each drone will spawn in a random (x,y) coordinate WITHIN its hivewhale parent's width/height
                   }
@@ -624,9 +705,12 @@ class Game {
     this.backGround.drawLastLayer(context)
   }
   addEnemy() {
-    const youGotLucky = Math.random() > .92
+    const youGotLucky = Math.random() > .5
     const randomize = Math.random()
-    const spawnHive = Math.random() < 0.1
+    const spawnHive = Math.random() < 0.05
+    const spawnMoonFish = Math.random() < 0.08
+
+    const spawnBulbWhale = Math.random() > 0.95
 
     this.enemies.push(
       youGotLucky ? new LuckyFish(this) : 
@@ -638,11 +722,18 @@ class Game {
       //  new Angler1(this )
        )
      spawnHive && this.enemies.push(new HiveWhale(this))
-    
+     spawnBulbWhale && this.enemies.push(new BulbWhale(this))
+     spawnMoonFish && this.enemies.push(new MoonFish(this))
   }  
   addExplosion(enemy) {
-    const randomized = Math.random()
-    if(randomized < 1) this.explosions.push(new SmokeExplosion(this, enemy.x,enemy.y))
+    const smokeExplosionGenerated = Math.random() > 0.7
+    this.explosions.push(
+      smokeExplosionGenerated ? new SmokeExplosion(this, enemy.x + enemy.width / 2,enemy.y + enemy.height / 2) 
+                                                 :
+      new FireExplosion(this, enemy.x + enemy.width / 2,enemy.y + enemy.height / 2) 
+     ) 
+      //this makes sure the explosions get drawn at the CENTER of each enemy)
+
   }
   checkCollision(rect1,rect2) {
     return ( //basic rectangle collision formula 
@@ -658,8 +749,8 @@ class Game {
   let lastTime = 0
 
   let msPrev = window.performance.now()
-  let fps = 60
-  let msPerFrame = 1000 / fps
+  let FPS_CAP = 60
+  let msPerFrame = 1000 / FPS_CAP
 
 
   function animate(timeStamp) {

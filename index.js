@@ -221,7 +221,9 @@ class Particle {
       if (this.game.ammo > 0 && !this.isPoweredUp)  {
           this.projectiles.push(new Projectile(this.game, this.x , this.y ))
           this.game.ammo--
-      } else if (this.isPoweredUp) {
+      }
+      this.game.sound.shot()
+      if (this.isPoweredUp) {
         this.projectiles.push(new Projectile(this.game, this.x , this.y + this.height * 0.3))
         this.shootBottom()
       }
@@ -242,6 +244,7 @@ class Particle {
       this.powerUpTimer = 0
       this.isPoweredUp = true
       if(this.game.ammo < ~~(this.game.maxAmmo * 0.75)) this.game.ammo = ~~(this.game.maxAmmo * 0.85)
+      this.game.sound.powerUp()
     }
   }
   class Enemy {
@@ -338,7 +341,7 @@ class BulbWhale extends Enemy {
     super(game) 
     this.width = 270
     this.height = 219 
-    this.lives = 22
+    this.lives = 17
     this.score = this.lives * 2
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = bulbWhaleImgs
@@ -360,6 +363,20 @@ class Drone extends Enemy {
     this.image = droneImgs
     this.frameY = ~~(Math.random()*2)
     this.speedX = Math.random() * -6 - 2
+  } 
+}
+class MoonFish extends Enemy {
+  constructor(game) { 
+    super(game) 
+    this.width = 227
+    this.height = 240 
+    this.lives = 25
+    this.score = this.lives * 2
+    this.y = Math.random() * (this.game.height  - this.game.player.height)
+    this.image = moonFishImgs
+    this.frameY = ~~(Math.random() * 2)
+    this.speedX = Math.random() * -0.35
+    this.type = 'moon'
   } 
 }
 class Layer { //sets up all 4 layer images 
@@ -458,6 +475,40 @@ class SmokeExplosion extends Explosion {
 
   }
 }
+class SoundController {
+  constructor() {
+    this.powerUpSound = powerUpSoundFile
+    this.powerDownSound = powerDownSoundFile
+    this.explosionSound = explosionSoundFile
+    this.hitSound = hitTargetSoundFile
+    this.shotSound = bulletShotSoundFile
+    this.shieldSound = shieldSoundFile
+  }
+  powerUp() {
+    this.powerUpSound.currentTime = 0 //rewinds sound file to 0:00
+    this.powerUpSound.play()
+  }
+  powerDown() {
+    this.powerDownSound.currentTime = 0 //rewinds sound file to 0:00
+    this.powerDownSound.play()
+  }
+  hitTarget() {
+    this.hitSound.currentTime = 0 //rewinds sound file to 0:00
+    this.hitSound.play()   
+  }
+  explosion() {
+    this.explosionSound.currentTime = 0 //rewinds sound file to 0:00
+    this.explosionSound.play()
+  }
+  shot() {
+    this.shotSound.currentTime = 0 //rewinds sound file to 0:00
+    this.shotSound.play()
+  }
+  shield() {
+    this.shieldSound.currentTime = 0 //rewinds sound file to 0:00
+    this.shieldSound.play()
+  }
+}
 class FireExplosion extends Explosion {
   constructor(game,x,y) {
     super(game,x,y)
@@ -536,6 +587,7 @@ class Game {
     this.input = new InputHandler(this)
     this.ui = new UI(this)
     this.keys = []
+    this.sound = new SoundController()
     this.explosions = []
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
@@ -546,7 +598,7 @@ class Game {
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 400
+    this.ammoInterval = 333
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
@@ -580,11 +632,12 @@ class Game {
       if (this.checkCollision(this.player, enemy)) {
           enemy.markedForDeletion = true
           this.addExplosion(enemy)
+          this.sound.shield()
           for (let i = 0; i < 4; i++) {
             this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2))
           }
 
-
+     
           if (enemy.type == 'lucky') {
             
          
@@ -600,16 +653,18 @@ class Game {
       this.player.projectiles.forEach(projectile => {
         if (this.checkCollision(projectile, enemy)) {
             //marking for deletion will make removing easier
+            this.sound.hitTarget()
             projectile.markedForDeletion = true
             enemy.lives--
                //handle new particles below
               for (let i = 0; i < 1; i++) {
               this.particles.push(new Particle(this, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2))
             }
-          
+            if (enemy.type == 'moon') this.player.enterPowerUp()
             if (enemy.type == 'lucky') this.score = this.score - 20
           
             if (enemy.lives <= 0) {
+              this.sound.explosion()
               enemy.markedForDeletion = true
               this.addExplosion(enemy)
               if (enemy.type == 'hive') {
@@ -650,9 +705,10 @@ class Game {
     this.backGround.drawLastLayer(context)
   }
   addEnemy() {
-    const youGotLucky = Math.random() > .92
+    const youGotLucky = Math.random() > .5
     const randomize = Math.random()
-    const spawnHive = Math.random() < 0.18
+    const spawnHive = Math.random() < 0.05
+    const spawnMoonFish = Math.random() < 0.08
 
     const spawnBulbWhale = Math.random() > 0.95
 
@@ -667,7 +723,7 @@ class Game {
        )
      spawnHive && this.enemies.push(new HiveWhale(this))
      spawnBulbWhale && this.enemies.push(new BulbWhale(this))
-    
+     spawnMoonFish && this.enemies.push(new MoonFish(this))
   }  
   addExplosion(enemy) {
     const smokeExplosionGenerated = Math.random() > 0.7

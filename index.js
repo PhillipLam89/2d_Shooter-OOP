@@ -1,4 +1,10 @@
-
+muteBtn.onclick = (e) => {
+  e.target.blur()
+  muteBtn.textContent = muteBtn.textContent == 'Mute' ? 'Play Sounds' : 'Mute'
+    const allSounds = document.querySelectorAll('audio')
+    allSounds.forEach(sound => sound.muted = 
+              muteBtn.textContent == 'Mute' ? false : true)
+}
 
   //canvas setup
   const canvas = document.getElementById('canvas1')
@@ -6,6 +12,7 @@
 
   canvas.width = 800
   canvas.height = 500
+
 
   class InputHandler {
       constructor(game) {
@@ -375,7 +382,7 @@ class MoonFish extends Enemy {
     this.y = Math.random() * (this.game.height  - this.game.player.height)
     this.image = moonFishImgs
     this.frameY = ~~(Math.random() * 2)
-    this.speedX = Math.random() * -0.35
+    this.speedX = -5
     this.type = 'moon'
   } 
 }
@@ -705,7 +712,7 @@ class Game {
     this.backGround.drawLastLayer(context)
   }
   addEnemy() {
-    const youGotLucky = Math.random() > .5
+    const youGotLucky = Math.random() > 0.93
     const randomize = Math.random()
     const spawnHive = Math.random() < 0.05
     const spawnMoonFish = Math.random() < 0.08

@@ -414,7 +414,7 @@ class Background { //pools the 4 Layer imgs together
   constructor(game) {
     this.game = game
     this.images = [...document.querySelectorAll('.bgLayer')] //must convert to array so we can use map method below
-    this.layers = this.images.map((img) => new Layer(this.game,img, Math.random() * 4 +1))
+    this.layers = this.images.map((img) => new Layer(this.game,img, Math.random() * 3+1))
     // this.lastLayer = new Layer(this.game, document.querySelector('.bgLayer4'), .35)
     // this.image1 = document.querySelector('#layer1')
     // this.image2 = document.querySelector('#layer2')

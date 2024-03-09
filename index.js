@@ -1,8 +1,11 @@
+
+
 muteBtn.onclick = (e) => {
   e.target.blur()
-  muteBtn.textContent = muteBtn.textContent == 'Mute' ? 'Play Sounds' : 'Mute'
-    const allSounds = document.querySelectorAll('audio')
-    allSounds.forEach(sound => sound.muted = 
+  muteBtn.textContent = muteBtn.textContent == 'Mute' ?
+                        'Play Sounds' : 'Mute'
+  const allSounds = document.querySelectorAll('audio')
+  allSounds.forEach(sound => sound.muted = 
               muteBtn.textContent == 'Mute' ? false : true)
 }
 
@@ -402,8 +405,8 @@ class Layer { //sets up all 4 layer images
     this.x-= this.game.speed * this.speedMod
   }
   draw(context) {
-    context.drawImage(this.image, this.x,this.y)
-    context.drawImage(this.image, this.x + this.width,this.y)
+    context.drawImage(this.image, this.x,this.y, this.width,this.height)
+    context.drawImage(this.image, this.x + this.width-1,this.y, this.width,this.height)
   }
 
   }
@@ -412,7 +415,7 @@ class Background { //pools the 4 Layer imgs together
     this.game = game
     this.images = [...document.querySelectorAll('.bgLayer')] //must convert to array so we can use map method below
     this.layers = this.images.map((img) => new Layer(this.game,img, 1.66))
-    this.lastLayer = new Layer(this.game, document.querySelector('.bgLayer4'), .35)
+    // this.lastLayer = new Layer(this.game, document.querySelector('.bgLayer4'), .35)
     // this.image1 = document.querySelector('#layer1')
     // this.image2 = document.querySelector('#layer2')
     // this.image3 = document.querySelector('#layer3')
@@ -431,12 +434,12 @@ class Background { //pools the 4 Layer imgs together
   draw(context) {
     this.layers.forEach(layer => layer.draw(context))
   }
-  updateLastLayer() { //so the layer 4 appears IN-FRONT of our player but our player  appears IN FRONT of all other layers
-    this.lastLayer.update()
-  }
-  drawLastLayer(ctx) {
-    this.lastLayer.draw(ctx)
-  }
+  // updateLastLayer() { //so the layer 4 appears IN-FRONT of our player but our player  appears IN FRONT of all other layers
+  //   this.lastLayer.update()
+  // }
+  // drawLastLayer(ctx) {
+  //   this.lastLayer.draw(ctx)
+  // }
 }
 class Explosion {
   constructor(game,x,y) {
@@ -599,7 +602,7 @@ class Game {
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 777
+    this.enemyInterval = 500
     this.ammo = 30
     this.maxAmmo = 50    
     this.ammoTimer = 0
@@ -618,7 +621,7 @@ class Game {
 
     this.backGround.update()
     this.player.update(deltaTime) 
-    this.backGround.updateLastLayer()
+    // this.backGround.updateLastLayer()
     //if game object calls update, then player object ALSO calls its update
     if (this.ammoTimer > this.ammoInterval) {
           if (this.ammo < this.maxAmmo) this.ammo++
@@ -709,13 +712,13 @@ class Game {
     this.explosions.forEach(ex => { //note that explosions are drawn AFTER enemies are, so explosions will be on top
       ex.draw(context)
     })
-    this.backGround.drawLastLayer(context)
+    // this.backGround.drawLastLayer(context)
   }
   addEnemy() {
     const youGotLucky = Math.random() > 0.93
     const randomize = Math.random()
     const spawnHive = Math.random() < 0.05
-    const spawnMoonFish = Math.random() < 0.08
+    const spawnMoonFish = Math.random() < .03
 
     const spawnBulbWhale = Math.random() > 0.95
 

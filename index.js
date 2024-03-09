@@ -17,7 +17,7 @@ muteBtn.onclick = (e) => {
   canvas.height = 500
 
 
-  class InputHandler {
+class InputHandler {
       constructor(game) {
         this.game = game;
         window.onkeydown = (e) => {
@@ -43,8 +43,8 @@ muteBtn.onclick = (e) => {
      
         }
       }
-  }
-  class Projectile {
+}
+class Projectile {
     constructor(game,x,y) {
       this.game = game
       this.x = x + this.game.player.width //so our projectile shoots from right side of player
@@ -65,7 +65,7 @@ muteBtn.onclick = (e) => {
       // context.fillStyle = 'cyan'
       // context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
-  }
+}
 class Particle {
     constructor(game,x,y) {
       this.game = game
@@ -112,7 +112,7 @@ class Particle {
       context.restore() //restores canvas state aka settings
     }
 }
-  class Player {
+class Player {
     constructor(game) {
       this.game = game //passes in whole game obj
       this.width = 120
@@ -256,8 +256,8 @@ class Particle {
       if(this.game.ammo < ~~(this.game.maxAmmo * 0.75)) this.game.ammo = ~~(this.game.maxAmmo * 0.85)
       this.game.sound.powerUp()
     }
-  }
-  class Enemy {
+}
+class Enemy {
       constructor(game) {
         this.game = game
         this.x = this.game.width
@@ -293,7 +293,7 @@ class Particle {
 
 
       }
-  }
+}
 
 class Angler1 extends Enemy { //Angler1 is a child of Enemy, all methods that cannot be find on Angler1 will look at Enemy's props/methods
   constructor(game) { //if constructor is not declared here, all new Angler1's will run Enemy's (aka parent's) constructor instead!
@@ -602,7 +602,7 @@ class Game {
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 500
+    this.enemyInterval = 888
     this.ammo = 30
     this.maxAmmo = 40    
     this.ammoTimer = 0
@@ -651,7 +651,7 @@ class Game {
           if (enemy.type == 'lucky') {
             
          
-            this.score = this.score + 35
+            this.score = this.score + 30
             this.player.enterPowerUp()
             const playerDiv = document.getElementById('player')
             playerDiv.src = './walkingSprite.png'

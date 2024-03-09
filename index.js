@@ -604,11 +604,11 @@ class Game {
     this.enemyTimer = 0
     this.enemyInterval = 500
     this.ammo = 30
-    this.maxAmmo = 50    
+    this.maxAmmo = 40    
     this.ammoTimer = 0
     this.score = 0
     this.winningScore = 500
-    this.ammoInterval = 333
+    this.ammoInterval = 444
     this.gameOver = false
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test

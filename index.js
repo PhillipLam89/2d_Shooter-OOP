@@ -66,6 +66,29 @@ class Projectile {
       // context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
 }
+class EnemyProjectile  {
+  constructor(game,x,y) {
+    this.game = game
+    this.x = x  //so our projectile shoots from right side of player
+    this.y = y
+    this.width = 10
+    this.height = 13
+    this.speed = 3
+    this.color  = 'tomato'
+    this.markedForDeletion = false
+    this.image = projectileImgs  //direct ID of the img element in html
+  }
+  update() {
+    this.x-= this.speed
+    //the below will remove all projectiles once theyre past 80% of the screen, also prevents enemies being killed off screen
+    if (this.x <= this.game.width - (228*0.2)) this.markedForDeletion = true
+  }
+  draw(context) {
+    context.drawImage(this.image,this.x,this.y + 30)
+    // context.fillStyle = 'cyan'
+    // context.fillRect(this.x,this.y + 30,this.width,this.height)
+  }
+}
 class Particle {
     constructor(game,x,y) {
       this.game = game
@@ -602,7 +625,7 @@ class Game {
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 888
+    this.enemyInterval = 777
     this.ammo = 30
     this.maxAmmo = 40    
     this.ammoTimer = 0
@@ -613,12 +636,20 @@ class Game {
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
     this.speed = 1.2
+    this.enemyShotsArr = []
     this.debug = false
   }
   update(deltaTime) {
     if (!this.gameOver) this.gameTime+= deltaTime
     if (this.gameTime >= this.timeLimit) this.gameOver = true
+    if ( (~~this.gameTime) % 3 === 0  && this.enemies.length)  {
+        const randomEnemyShooter = this.enemies[~~(Math.random() * this.enemies.length)]
+        this.enemyShotsArr.push(new EnemyProjectile(this, randomEnemyShooter.x, randomEnemyShooter.y))
 
+    }
+    if (this.enemyShotsArr.length) {
+      this.enemyShotsArr.forEach(shot => shot.update())
+    }
     this.backGround.update()
     this.player.update(deltaTime) 
     // this.backGround.updateLastLayer()
@@ -706,6 +737,7 @@ class Game {
     this.ui.draw(context)
     this.particles.forEach(particle => particle.draw(context))
 
+    this.enemyShotsArr.forEach(shot => shot.draw(context))
     this.enemies.forEach(enemy => {
       enemy.draw(context)
     })

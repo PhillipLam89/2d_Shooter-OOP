@@ -1,3 +1,4 @@
+// document.querySelectorAll('audio').forEach(s => s.muted = true)
 
 
 muteBtn.onclick = (e) => {
@@ -71,22 +72,25 @@ class EnemyProjectile  {
     this.game = game
     this.x = x  //so our projectile shoots from right side of player
     this.y = y
-    this.width = 10
+    this.width = 50
     this.height = 13
-    this.speed = 3
+    this.speed = 6
     this.color  = 'tomato'
     this.markedForDeletion = false
-    this.image = projectileImgs  //direct ID of the img element in html
+  //direct ID of the img element in html
   }
   update() {
     this.x-= this.speed
     //the below will remove all projectiles once theyre past 80% of the screen, also prevents enemies being killed off screen
-    if (this.x <= this.game.width - (228*0.2)) this.markedForDeletion = true
+    if (this.x <= this.game.width * .007) {
+      this.markedForDeletion = true
+     
   }
+    }
   draw(context) {
-    context.drawImage(this.image,this.x,this.y + 30)
-    // context.fillStyle = 'cyan'
-    // context.fillRect(this.x,this.y + 30,this.width,this.height)
+    // context.drawImage(this.image,this.x,this.y + 30)
+    context.fillStyle = 'tomato'
+     if (this.game.enemies.length)context.fillRect(this.x,this.y + this.game.enemies[0].height * .5 ,this.width,this.height)
   }
 }
 class Particle {
@@ -284,7 +288,7 @@ class Enemy {
       constructor(game) {
         this.game = game
         this.x = this.game.width
-        this.speedX = Math.random() * -4
+        this.speedX = Math.random() * -4 - this.game.speed
         this.markedForDeletion = false
 
         this.frameX = 0
@@ -642,14 +646,29 @@ class Game {
   update(deltaTime) {
     if (!this.gameOver) this.gameTime+= deltaTime
     if (this.gameTime >= this.timeLimit) this.gameOver = true
-    if ( (~~this.gameTime) % 3 === 0  && this.enemies.length)  {
+    if ( (~~this.gameTime) % 4 == 0 && 
+         (~~this.gameTime) % 7 == 0 && 
+         (~~this.gameTime) % 5 == 0 &&
+         this.enemies.length)  {
         const randomEnemyShooter = this.enemies[~~(Math.random() * this.enemies.length)]
         this.enemyShotsArr.push(new EnemyProjectile(this, randomEnemyShooter.x, randomEnemyShooter.y))
 
     }
-    if (this.enemyShotsArr.length) {
-      this.enemyShotsArr.forEach(shot => shot.update())
-    }
+
+      this.enemyShotsArr.forEach(shot => {
+        if (this.checkCollision(this.player, shot)) {
+          this.score-= 5
+          shot.markedForDeletion = true
+          this.sound.shield()
+        }
+        shot.update()
+
+      })
+
+     
+
+    this.enemyShotsArr = this.enemyShotsArr.filter(shot => !shot.markedForDeletion)
+
     this.backGround.update()
     this.player.update(deltaTime) 
     // this.backGround.updateLastLayer()
@@ -660,7 +679,8 @@ class Game {
     } else {
         this.ammoTimer+= deltaTime
     }
-               
+
+
     // handle particles generation/deletion if enemy hits player
     this.particles.forEach((particle) => particle.update())
     this.particles = this.particles.filter(particle => !particle.markedForDeletion)

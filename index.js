@@ -288,7 +288,7 @@ class Enemy {
       constructor(game) {
         this.game = game
         this.x = this.game.width
-        this.speedX = Math.random() * -4 - this.game.speed
+        this.speedX = Math.random() * -3.5 - this.game.speed
         this.markedForDeletion = false
 
         this.frameX = 0
@@ -662,7 +662,6 @@ class Game {
           this.sound.shield()
         }
         shot.update()
-
       })
 
      

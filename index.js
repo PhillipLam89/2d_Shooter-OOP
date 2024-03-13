@@ -1,3 +1,4 @@
+// document.querySelectorAll('audio').forEach(s => s.muted = true)
 
 
 muteBtn.onclick = (e) => {
@@ -65,6 +66,32 @@ class Projectile {
       // context.fillStyle = 'cyan'
       // context.fillRect(this.x,this.y + 30,this.width,this.height)
     }
+}
+class EnemyProjectile  {
+  constructor(game,x,y) {
+    this.game = game
+    this.x = x  //so our projectile shoots from right side of player
+    this.y = y
+    this.width = 50
+    this.height = 13
+    this.speed = 6
+    this.color  = 'tomato'
+    this.markedForDeletion = false
+  //direct ID of the img element in html
+  }
+  update() {
+    this.x-= this.speed
+    //the below will remove all projectiles once theyre past 80% of the screen, also prevents enemies being killed off screen
+    if (this.x <= this.game.width * .007) {
+      this.markedForDeletion = true
+     
+  }
+    }
+  draw(context) {
+    // context.drawImage(this.image,this.x,this.y + 30)
+    context.fillStyle = 'tomato'
+     if (this.game.enemies.length)context.fillRect(this.x,this.y + this.game.enemies[0].height * .5 ,this.width,this.height)
+  }
 }
 class Particle {
     constructor(game,x,y) {
@@ -261,7 +288,7 @@ class Enemy {
       constructor(game) {
         this.game = game
         this.x = this.game.width
-        this.speedX = Math.random() * -4
+        this.speedX = Math.random() * -4 - this.game.speed
         this.markedForDeletion = false
 
         this.frameX = 0
@@ -602,7 +629,7 @@ class Game {
     this.enemies = []
     this.particles = [] //holds all generated dust/particle effects after enemies die
     this.enemyTimer = 0
-    this.enemyInterval = 888
+    this.enemyInterval = 777
     this.ammo = 30
     this.maxAmmo = 40    
     this.ammoTimer = 0
@@ -613,11 +640,34 @@ class Game {
     this.gameTime = 0
     this.timeLimit = 1000 * 60  //5s to test
     this.speed = 1.2
+    this.enemyShotsArr = []
     this.debug = false
   }
   update(deltaTime) {
     if (!this.gameOver) this.gameTime+= deltaTime
     if (this.gameTime >= this.timeLimit) this.gameOver = true
+    if ( (~~this.gameTime) % 4 == 0 && 
+         (~~this.gameTime) % 7 == 0 && 
+         (~~this.gameTime) % 5 == 0 &&
+         this.enemies.length)  {
+        const randomEnemyShooter = this.enemies[~~(Math.random() * this.enemies.length)]
+        this.enemyShotsArr.push(new EnemyProjectile(this, randomEnemyShooter.x, randomEnemyShooter.y))
+
+    }
+
+      this.enemyShotsArr.forEach(shot => {
+        if (this.checkCollision(this.player, shot)) {
+          this.score-= 5
+          shot.markedForDeletion = true
+          this.sound.shield()
+        }
+        shot.update()
+
+      })
+
+     
+
+    this.enemyShotsArr = this.enemyShotsArr.filter(shot => !shot.markedForDeletion)
 
     this.backGround.update()
     this.player.update(deltaTime) 
@@ -629,7 +679,8 @@ class Game {
     } else {
         this.ammoTimer+= deltaTime
     }
-               
+
+
     // handle particles generation/deletion if enemy hits player
     this.particles.forEach((particle) => particle.update())
     this.particles = this.particles.filter(particle => !particle.markedForDeletion)
@@ -706,6 +757,7 @@ class Game {
     this.ui.draw(context)
     this.particles.forEach(particle => particle.draw(context))
 
+    this.enemyShotsArr.forEach(shot => shot.draw(context))
     this.enemies.forEach(enemy => {
       enemy.draw(context)
     })

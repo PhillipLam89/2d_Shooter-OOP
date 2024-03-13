@@ -9,6 +9,7 @@
   min-width: 100dvw;
   min-height: 100dvh;
 
+  background-color: rgba(234, 112, 232, 0.6)
 }
 .hide,.bgLayer,.bgLayer4{
   display: none;
